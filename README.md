@@ -1,12 +1,12 @@
 # GarudaSpot — Flutter Mobile Application
 
 ## 1. Daftar Anggota Kelompok
-- Rifki
-- Petrus
-- Dafa 
-- Azzam  
-- Hasan  
-- Fernando  
+- Rifqy Pradipta Kurniawan
+- Petrus Wermasaubun
+- Daffa Syafitra
+- Muhammad Azzam Fathurrahman
+- Hasanul Muttaqin 
+- Fernando Lawrence
 
 ## 2. Tautan APK
 Belum tersedia (akan ditambahkan pada Tahap II).
