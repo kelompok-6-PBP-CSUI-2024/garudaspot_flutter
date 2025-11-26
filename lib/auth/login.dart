@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:garudaspot_flutter/auth/register.dart';
+import 'package:garudaspot_flutter/news/newspage.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 
@@ -75,14 +75,12 @@ class _LoginPageState extends State<LoginPage> {
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => HomePage(username: uname),
+                        builder: (context) => const NewsPage(),
                       ),
                     );
-                    ScaffoldMessenger.of(context)
-                      ..hideCurrentSnackBar()
-                      ..showSnackBar(
-                        SnackBar(content: Text("$message Welcome, $uname.")),
-                      );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("$message Welcome, $uname.")),
+                    );
                   }
                 } else {
                   if (context.mounted) {
@@ -99,33 +97,12 @@ class _LoginPageState extends State<LoginPage> {
             const SizedBox(height: 12),
             TextButton(
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const RegisterPage(),
-                  ),
-                );
+                Navigator.pushNamed(context, '/register');
               },
               child: const Text("Don't have an account? Register"),
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class HomePage extends StatelessWidget {
-  final String username;
-  const HomePage({super.key, required this.username});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Home')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Text('Logged in as $username'),
       ),
     );
   }

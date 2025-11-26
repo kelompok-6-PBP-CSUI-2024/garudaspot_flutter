@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:garudaspot_flutter/auth/login.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 
@@ -65,12 +64,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Successfully registered!')),
                     );
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const LoginPage(),
-                      ),
-                    );
+                    Navigator.pushReplacementNamed(context, '/');
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
