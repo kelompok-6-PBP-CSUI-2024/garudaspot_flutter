@@ -100,10 +100,10 @@ packages:
     dependency: transitive
     description:
       name: http
-      sha256: "5895291c13fa8a3bd82e76d5627f69e0d85ca6a30dcac95c4ea19a5d555879c2"
+      sha256: "87721a4a50b19c7f1d49001e51409bddc46303966ce89a65af4f4e6004896412"
       url: "https://pub.dev"
     source: hosted
-    version: "0.13.6"
+    version: "1.6.0"
   http_parser:
     dependency: transitive
     description:
@@ -212,10 +212,10 @@ packages:
     dependency: "direct main"
     description:
       name: pbp_django_auth
-      sha256: "6d7ab0b7899da4964e2425e1c22735ad0a59acfd1e852467573c8ea30ef1f305"
+      sha256: "9d88584e30f66f8d2f4031092e439e183e59208cef5a876625829729524594ba"
       url: "https://pub.dev"
     source: hosted
-    version: "0.1.2"
+    version: "0.4.0"
   platform:
     dependency: transitive
     description:
