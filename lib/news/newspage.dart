@@ -4,6 +4,8 @@ import 'dart:convert';
 
 import 'model/news.dart';
 import 'news_detail_page.dart';
+import 'news_header.dart';
+import '../right_drawer.dart';
 
 /// News landing page for the news module.
 /// Fetches from the Django backend API.
@@ -195,26 +197,17 @@ class _NewsPageState extends State<NewsPage> {
           const SizedBox(width: 4),
         ],
       ),
-      endDrawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(color: Colors.black12),
-              child: Text('Menu'),
-            ),
-            _drawerItem(Icons.article_outlined, 'News', onTap: () {}),
-            _drawerItem(Icons.shopping_bag_outlined, 'Merch', onTap: () {}),
-            _drawerItem(Icons.groups_outlined, 'Squad', onTap: () {}),
-            _drawerItem(Icons.event_available_outlined, 'Schedule', onTap: () {}),
-            _drawerItem(Icons.confirmation_num_outlined, 'Ticket', onTap: () {}),
-            _drawerItem(Icons.forum_outlined, 'Forum', onTap: () {}),
-          ],
-        ),
-      ),
+      endDrawer: const RightDrawer(),
       body: Column(
         children: [
-          _buildHero(),
+          NewsHeader(
+            isAdmin: widget.isAdmin,
+            onAddNews: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Add News tapped')),
+              );
+            },
+          ),
           _buildFilters(),
           Expanded(
             child: _buildNewsList(),
@@ -222,88 +215,6 @@ class _NewsPageState extends State<NewsPage> {
           _buildLoadMore(),
         ],
       ),
-    );
-  }
-
-  Widget _buildHero() {
-    return Stack(
-      children: [
-        SizedBox(
-          height: 200,
-          width: double.infinity,
-          child: Image.asset(
-            'assets/images/background.png',
-            fit: BoxFit.cover,
-          ),
-        ),
-        Container(
-          height: 200,
-          width: double.infinity,
-          color: Colors.white.withOpacity(0.8),
-        ),
-        SizedBox(
-          height: 200,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  'Garuda Spot',
-                  style: TextStyle(
-                    letterSpacing: 3,
-                    fontSize: 12,
-                    color: Colors.grey,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                const Text(
-                  'BERITA TERKINI',
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Container(
-                  width: 60,
-                  height: 3,
-                  color: Colors.red.shade700,
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Berita terbaru sepak bola Indonesia',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.black87,
-                  ),
-                ),
-                if (widget.isAdmin) ...[
-                  const SizedBox(height: 12),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red.shade700,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
-                      ),
-                    ),
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Add News tapped')),
-                      );
-                    },
-                    child: const Text('Add News'),
-                  ),
-                ]
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 
@@ -423,17 +334,6 @@ class _NewsPageState extends State<NewsPage> {
               )
             : const Text('Load More'),
       ),
-    );
-  }
-
-  ListTile _drawerItem(IconData icon, String label, {VoidCallback? onTap}) {
-    return ListTile(
-      leading: Icon(icon),
-      title: Text(label),
-      onTap: onTap ??
-          () {
-            Navigator.of(context).pop();
-          },
     );
   }
 }
