@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
+
 import 'model/news.dart';
 import 'news_detail_page.dart';
 import 'news_header.dart';
@@ -20,7 +23,7 @@ class NewsPage extends StatefulWidget {
 }
 
 class _NewsPageState extends State<NewsPage> {
-  static const String _baseUrl = 'http://localhost:8000/api/news/';
+  static const String _baseUrl = 'http://localhost:8000/json/';
   final List<News> _news = [];
 
   final List<String> _months = const [
@@ -151,6 +154,8 @@ class _NewsPageState extends State<NewsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final request = context.watch<CookieRequest>();
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -186,11 +191,7 @@ class _NewsPageState extends State<NewsPage> {
           ),
           if (widget.isAdmin)
             IconButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Add News tapped')),
-                );
-              },
+              onPressed: () => _openAddDialog(request),
               icon: const Icon(Icons.add, color: Colors.black),
               tooltip: 'Add News',
             ),
@@ -202,11 +203,7 @@ class _NewsPageState extends State<NewsPage> {
         children: [
           NewsHeader(
             isAdmin: widget.isAdmin,
-            onAddNews: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Add News tapped')),
-              );
-            },
+            onAddNews: () => _openAddDialog(request),
           ),
           _buildFilters(),
           Expanded(
@@ -219,42 +216,63 @@ class _NewsPageState extends State<NewsPage> {
   }
 
   Widget _buildFilters() {
+    TextStyle labelStyle = const TextStyle(fontWeight: FontWeight.w600);
     return Padding(
-      padding: const EdgeInsets.all(12.0),
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
       child: Row(
         children: [
           Expanded(
-            child: DropdownButton<String>(
-              value: _selectedMonth,
-              isExpanded: true,
-              items: _months
-                  .map((m) => DropdownMenuItem(value: m, child: Text('Bulan: $m')))
-                  .toList(),
-              onChanged: (value) {
-                if (value == null) return;
-                setState(() {
-                  _selectedMonth = value;
-                });
-                _loadNews(reset: true);
-              },
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: Colors.red.shade700, width: 2),
+                ),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: _selectedMonth,
+                  isExpanded: true,
+                  style: labelStyle,
+                  items: _months
+                      .map((m) => DropdownMenuItem(value: m, child: Text('Bulan: $m')))
+                      .toList(),
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setState(() {
+                      _selectedMonth = value;
+                    });
+                    _loadNews(reset: true);
+                  },
+                ),
+              ),
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: DropdownButton<String>(
-              value: _selectedSort,
-              isExpanded: true,
-              items: const [
-                DropdownMenuItem(value: 'Terbaru', child: Text('Urutkan: Terbaru')),
-                DropdownMenuItem(value: 'Terlama', child: Text('Urutkan: Terlama')),
-              ],
-              onChanged: (value) {
-                if (value == null) return;
-                setState(() {
-                  _selectedSort = value;
-                });
-                _loadNews(reset: true);
-              },
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: Colors.red.shade700, width: 2),
+                ),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: _selectedSort,
+                  isExpanded: true,
+                  style: labelStyle,
+                  items: const [
+                    DropdownMenuItem(value: 'Terbaru', child: Text('Urutkan: Terbaru')),
+                    DropdownMenuItem(value: 'Terlama', child: Text('Urutkan: Terlama')),
+                  ],
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setState(() {
+                      _selectedSort = value;
+                    });
+                    _loadNews(reset: true);
+                  },
+                ),
+              ),
             ),
           ),
         ],
@@ -285,29 +303,79 @@ class _NewsPageState extends State<NewsPage> {
           final snippet = item.content.length > 200
               ? '${item.content.substring(0, 200)}…'
               : item.content;
-          return ListTile(
-            title: Text(item.title),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('${item.category} • ${item.publishDate}'),
-                const SizedBox(height: 4),
-                Text(snippet),
-              ],
-            ),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => NewsDetailPage(
-                    news: item,
+          return Card(
+            elevation: 1,
+            margin: EdgeInsets.zero,
+            child: InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => NewsDetailPage(
+                      news: item,
+                    ),
                   ),
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.red.shade200),
+                          ),
+                          child: Text(
+                            item.category,
+                            style: TextStyle(
+                              color: Colors.red.shade700,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          item.publishDate,
+                          style: const TextStyle(
+                            color: Colors.black54,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      item.title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      width: 60,
+                      height: 2,
+                      color: Colors.red.shade700,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      snippet,
+                      style: const TextStyle(color: Colors.black87),
+                    ),
+                  ],
                 ),
-              );
-            },
+              ),
+            ),
           );
         },
-        separatorBuilder: (_, __) => const Divider(height: 1),
+        separatorBuilder: (_, __) => const SizedBox(height: 8),
         itemCount: _news.length,
       ),
     );
@@ -335,6 +403,97 @@ class _NewsPageState extends State<NewsPage> {
             : const Text('Load More'),
       ),
     );
+  }
+
+  void _openAddDialog(CookieRequest request) {
+    final titleC = TextEditingController();
+    final categoryC = TextEditingController();
+    final dateC = TextEditingController();
+    final contentC = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Add News'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleC,
+                decoration: const InputDecoration(labelText: 'Title'),
+              ),
+              TextField(
+                controller: categoryC,
+                decoration: const InputDecoration(labelText: 'Category'),
+              ),
+              TextField(
+                controller: dateC,
+                decoration: const InputDecoration(labelText: 'Publish date'),
+              ),
+              TextField(
+                controller: contentC,
+                decoration: const InputDecoration(labelText: 'Content'),
+                maxLines: 4,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await _submitCreate(
+                request: request,
+                title: titleC.text,
+                category: categoryC.text,
+                publishDate: dateC.text,
+                content: contentC.text,
+              );
+              if (mounted) {
+                Navigator.pop(ctx);
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _submitCreate({
+    required CookieRequest request,
+    required String title,
+    required String category,
+    required String publishDate,
+    required String content,
+  }) async {
+    if (!(widget.isAdmin)) return;
+    try {
+      final res = await request.post(
+        "http://localhost:8000/api/news/add/",
+        {
+          "title": title,
+          "category": category,
+          "publish_date": publishDate,
+          "content": content,
+        },
+      );
+      final created = News.fromJson(res as Map<String, dynamic>);
+      setState(() {
+        _news.insert(0, created);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('News created')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to create news: $e')),
+      );
+    }
   }
 }
 
