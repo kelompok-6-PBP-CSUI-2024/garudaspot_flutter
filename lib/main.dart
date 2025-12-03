@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'auth/login.dart';
 import 'auth/register.dart';
 import 'news/newspage.dart';
+import 'merch/merch_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -27,6 +28,7 @@ class MyApp extends StatelessWidget {
           '/': (_) => const LoginPage(),
           '/register': (_) => const RegisterPage(),
           '/news': (_) => const NewsPage(),
+          '/merch': (_) => const MerchPage(),
         },
       ),
     );

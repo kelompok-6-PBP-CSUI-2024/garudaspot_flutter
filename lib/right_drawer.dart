@@ -32,6 +32,11 @@ class RightDrawer extends StatelessWidget {
       title: Text(label),
       onTap: () {
         Navigator.of(context).pop();
+        if (label == 'News') {
+          Navigator.pushNamed(context, '/news');
+        } else if (label == 'Merch') {
+          Navigator.pushNamed(context, '/merch');
+        }
       },
     );
   }
