@@ -198,11 +198,14 @@ class _LoginPageState extends State<LoginPage> {
                           if (request.loggedIn) {
                             final message = response['message'];
                             final uname = response['username'];
+                            final isAdmin = response['is_admin'] == true;
                             if (context.mounted) {
                               Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const NewsPage(),
+                                  builder: (context) => NewsPage(
+                                    isAdmin: isAdmin,
+                                  ),
                                 ),
                               );
                               ScaffoldMessenger.of(context).showSnackBar(
