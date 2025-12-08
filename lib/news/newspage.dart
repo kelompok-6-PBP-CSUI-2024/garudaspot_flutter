@@ -207,7 +207,7 @@ class _NewsPageState extends State<NewsPage> {
           ),
           _buildFilters(),
           Expanded(
-            child: _buildNewsList(),
+            child: _buildNewsList(request),
           ),
           _buildLoadMore(),
         ],
@@ -280,7 +280,7 @@ class _NewsPageState extends State<NewsPage> {
     );
   }
 
-  Widget _buildNewsList() {
+  Widget _buildNewsList(CookieRequest request) {
     if (_loading && _news.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -341,12 +341,22 @@ class _NewsPageState extends State<NewsPage> {
                             ),
                           ),
                         ),
-                        Text(
-                          item.publishDate,
-                          style: const TextStyle(
-                            color: Colors.black54,
-                            fontSize: 12,
-                          ),
+                        Row(
+                          children: [
+                            Text(
+                              item.publishDate,
+                              style: const TextStyle(
+                                color: Colors.black54,
+                                fontSize: 12,
+                              ),
+                            ),
+                            if (widget.isAdmin)
+                              IconButton(
+                                onPressed: () => _confirmDelete(item, request),
+                                icon: Icon(Icons.delete_outline, color: Colors.red.shade700),
+                                tooltip: 'Delete',
+                              ),
+                          ],
                         ),
                       ],
                     ),
@@ -492,6 +502,56 @@ class _NewsPageState extends State<NewsPage> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to create news: $e')),
+      );
+    }
+  }
+
+  Future<void> _confirmDelete(News item, CookieRequest request) async {
+    if (!widget.isAdmin) return;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hapus berita?'),
+        content: Text('Berita "${item.title}" akan dihapus. Lanjutkan?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text(
+              'Hapus',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+    await _deleteNews(item, request);
+  }
+
+  Future<void> _deleteNews(News item, CookieRequest request) async {
+    try {
+      final res = await request.post(
+        "http://localhost:8000/api/news/delete/${item.id}/",
+        {},
+      );
+      final ok = res is Map<String, dynamic> && res['deleted'] != null;
+      if (!ok) {
+        throw Exception('Unexpected response');
+      }
+      setState(() {
+        _news.removeWhere((n) => n.id == item.id);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('News deleted')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete: $e')),
       );
     }
   }
