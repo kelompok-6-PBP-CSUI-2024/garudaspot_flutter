@@ -21,12 +21,14 @@ class RightDrawer extends StatelessWidget {
           _drawerItem(Icons.event_available_outlined, 'Schedule', context),
           _drawerItem(Icons.confirmation_num_outlined, 'Ticket', context),
           _drawerItem(Icons.forum_outlined, 'Forum', context),
+          const Divider(),
+          _drawerItem(Icons.logout, 'Logout', context, isLogout: true),
         ],
       ),
     );
   }
 
-  ListTile _drawerItem(IconData icon, String label, BuildContext context) {
+  ListTile _drawerItem(IconData icon, String label, BuildContext context, {bool isLogout = false}) {
     return ListTile(
       leading: Icon(icon),
       title: Text(label),
@@ -36,6 +38,8 @@ class RightDrawer extends StatelessWidget {
           Navigator.pushNamed(context, '/news');
         } else if (label == 'Merch') {
           Navigator.pushNamed(context, '/merch');
+        } else if (isLogout) {
+          Navigator.pushReplacementNamed(context, '/');
         }
       },
     );
