@@ -40,6 +40,8 @@ class RightDrawer extends StatelessWidget {
           Navigator.pushNamed(context, '/merch');
         } else if (isLogout) {
           Navigator.pushReplacementNamed(context, '/');
+        } else if (label == 'Squad') {
+          Navigator.pushNamed(context, '/Squad');
         }
       },
     );

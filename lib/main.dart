@@ -6,6 +6,7 @@ import 'auth/login.dart';
 import 'auth/register.dart';
 import 'news/newspage.dart';
 import 'merch/merch_page.dart';
+import 'Squad/player.dart';
 
 void main() {
   runApp(const MyApp());
@@ -29,6 +30,7 @@ class MyApp extends StatelessWidget {
           '/register': (_) => const RegisterPage(),
           '/news': (_) => const NewsPage(),
           '/merch': (_) => const MerchPage(),
+          '/Squad': (_) => const SquadPage(),
         },
       ),
     );
