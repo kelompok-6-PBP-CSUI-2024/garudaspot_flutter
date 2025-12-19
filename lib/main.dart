@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:garudaspot_flutter/schedule/macth_list.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 
@@ -30,6 +31,7 @@ class MyApp extends StatelessWidget {
           '/register': (_) => const RegisterPage(),
           '/news': (_) => const NewsPage(),
           '/merch': (_) => const MerchPage(),
+          '/schedule': (_) => const MatchListPage(),
           '/Squad': (_) => const SquadPage(),
         },
       ),
