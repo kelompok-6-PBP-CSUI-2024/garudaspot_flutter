@@ -11,6 +11,7 @@ class Merch {
     required this.thumbnail,
     required this.category,
     required this.link,
+    required this.viewCount,
   });
 
   final int id;
@@ -22,6 +23,7 @@ class Merch {
   final String thumbnail;
   final String category;
   final String link;
+  final int viewCount;
 
   factory Merch.fromJson(Map<String, dynamic> json) {
     return Merch(
@@ -34,6 +36,7 @@ class Merch {
       thumbnail: json['thumbnail']?.toString() ?? '',
       category: json['category']?.toString() ?? '',
       link: json['link']?.toString() ?? '',
+      viewCount: _toInt(json['view_count']),
     );
   }
 
@@ -48,6 +51,7 @@ class Merch {
       'thumbnail': thumbnail,
       'category': category,
       'link': link,
+      'view_count': viewCount,
     };
   }
 }
