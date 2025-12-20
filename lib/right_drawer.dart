@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 
+import 'merch/merch_page.dart';
+import 'news/newspage.dart';
+import 'schedule/macth_list.dart';
+
 /// Placeholder right drawer navigation.
 /// Buttons are non-functional for now; wire navigation later.
 class RightDrawer extends StatelessWidget {
-  const RightDrawer({super.key});
+  const RightDrawer({super.key, this.isAdmin = false});
+
+  final bool isAdmin;
 
   @override
   Widget build(BuildContext context) {
@@ -35,9 +41,26 @@ class RightDrawer extends StatelessWidget {
       onTap: () {
         Navigator.of(context).pop();
         if (label == 'News') {
-          Navigator.pushNamed(context, '/news');
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => NewsPage(isAdmin: isAdmin),
+            ),
+          );
         } else if (label == 'Merch') {
-          Navigator.pushNamed(context, '/merch');
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => MerchPage(isAdmin: isAdmin),
+            ),
+          );
+        } else if (label == 'Schedule') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => MatchListPage(isAdmin: isAdmin),
+            ),
+          );
         } else if (isLogout) {
           Navigator.pushReplacementNamed(context, '/');
         } else if (label == 'Squad') {
