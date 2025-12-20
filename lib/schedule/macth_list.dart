@@ -209,10 +209,7 @@ class _MatchListPageState extends State<MatchListPage> {
           const SizedBox(width: 4),
         ],
       ),
-      endDrawer: RightDrawer(
-        isAdmin: widget.isAdmin,
-        isSuperuser: widget.isAdmin,
-      ),
+      endDrawer: const RightDrawer(),
       body: Column(
         children: [
           Container(
