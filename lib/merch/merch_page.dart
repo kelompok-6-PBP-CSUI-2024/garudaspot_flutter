@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../right_drawer.dart';
+import 'merch_header.dart';
 import 'merch_detail_page.dart';
 import 'model/merch.dart';
 
@@ -112,13 +113,21 @@ class _MerchPageState extends State<MerchPage> {
               tooltip: 'Menu',
             ),
           ),
+          if (widget.isAdmin)
+            IconButton(
+              onPressed: () => _openAddDialog(request),
+              icon: const Icon(Icons.add, color: Colors.black),
+              tooltip: 'Add Merch',
+            ),
           const SizedBox(width: 4),
         ],
       ),
       endDrawer: RightDrawer(isAdmin: widget.isAdmin),
-      body: FutureBuilder<List<Merch>>(
-        future: _futureMerch,
-        builder: (context, snapshot) {
+      body: Container(
+        color: Colors.white,
+        child: FutureBuilder<List<Merch>>(
+          future: _futureMerch,
+          builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -132,20 +141,7 @@ class _MerchPageState extends State<MerchPage> {
           final items = _applyFilterSort(rawItems);
           return Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Merch',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color.fromARGB(255, 115, 13, 13),
-                    ),
-                  ),
-                ),
-              ),
+              const MerchHeader(),
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
                 child: Row(
@@ -371,7 +367,8 @@ class _MerchPageState extends State<MerchPage> {
               ),
             ],
           );
-        },
+          },
+        ),
       ),
     );
   }
@@ -491,6 +488,152 @@ class _MerchPageState extends State<MerchPage> {
         ],
       ),
     );
+  }
+
+  void _openAddDialog(CookieRequest request) {
+    if (!widget.isAdmin) return;
+    final nameC = TextEditingController();
+    final vendorC = TextEditingController();
+    final priceC = TextEditingController(text: '0');
+    final stockC = TextEditingController(text: '0');
+    final thumbnailC = TextEditingController();
+    final linkC = TextEditingController();
+    final descriptionC = TextEditingController();
+    String selectedCategory = _categoryOptions.first;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Add Merch'),
+        content: SingleChildScrollView(
+          child: StatefulBuilder(
+            builder: (context, setDialogState) => Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameC,
+                  decoration: const InputDecoration(labelText: 'Name'),
+                ),
+                TextField(
+                  controller: vendorC,
+                  decoration: const InputDecoration(labelText: 'Vendor'),
+                ),
+                TextField(
+                  controller: priceC,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Price'),
+                ),
+                TextField(
+                  controller: stockC,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Stock'),
+                ),
+                TextField(
+                  controller: thumbnailC,
+                  decoration: const InputDecoration(labelText: 'Thumbnail URL'),
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  value: selectedCategory,
+                  decoration: const InputDecoration(labelText: 'Category'),
+                  items: _categoryOptions
+                      .map(
+                        (value) => DropdownMenuItem(
+                          value: value,
+                          child: Text(_capitalize(value)),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setDialogState(() => selectedCategory = value);
+                  },
+                ),
+                TextField(
+                  controller: linkC,
+                  decoration: const InputDecoration(labelText: 'Product Link'),
+                ),
+                TextField(
+                  controller: descriptionC,
+                  decoration: const InputDecoration(labelText: 'Description'),
+                  maxLines: 3,
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await _submitCreate(
+                request: request,
+                name: nameC.text,
+                vendor: vendorC.text,
+                price: priceC.text,
+                stock: stockC.text,
+                thumbnail: thumbnailC.text,
+                category: selectedCategory,
+                link: linkC.text,
+                description: descriptionC.text,
+              );
+              if (mounted) {
+                Navigator.pop(ctx);
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _submitCreate({
+    required CookieRequest request,
+    required String name,
+    required String vendor,
+    required String price,
+    required String stock,
+    required String thumbnail,
+    required String category,
+    required String link,
+    required String description,
+  }) async {
+    if (!widget.isAdmin) return;
+    try {
+      await request.post(
+        "http://localhost:8000/merch/api/create/",
+        {
+          "name": name,
+          "vendor": vendor,
+          "price": price,
+          "stock": stock,
+          "thumbnail": thumbnail,
+          "category": category,
+          "link": link,
+          "description": description,
+        },
+      );
+      if (mounted) {
+        setState(() {
+          _futureMerch = _fetchMerch();
+        });
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Merch created')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to create merch: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _submitEdit({
