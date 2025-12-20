@@ -19,7 +19,6 @@ class PlayerDetailPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  /// ===== TOP BAR =====
                   Row(
                     children: [
                       InkWell(
@@ -120,22 +119,28 @@ class PlayerDetailPage extends StatelessWidget {
         const SizedBox(height: 40),
 
         /// INFO GRID
-        Wrap(
-          spacing: 60,
-          runSpacing: 24,
-          children: [
-            _info('Position', player.positions.join(', ')),
-            _info('Date of Birth', '-'),
-            _info(
-              'Height',
-              player.heightCm != null ? '${player.heightCm} cm' : '-',
-            ),
-            _info(
-              'Club',
-              player.club.isNotEmpty ? player.club : '-',
-            ),
-          ],
-        ),
+Wrap(
+  spacing: 60,
+  runSpacing: 24,
+  children: [
+    _info('Position', player.positions.join(', ')),
+    _info(
+      'Date of Birth',
+      (player.birthDate != null && player.birthDate!.isNotEmpty)
+          ? player.birthDate!
+          : '-',
+    ),
+    _info(
+      'Height',
+      player.heightCm != null ? '${player.heightCm} cm' : '-',
+    ),
+    _info(
+      'Club',
+      player.club.isNotEmpty ? player.club : '-',
+    ),
+  ],
+),
+
 
         const SizedBox(height: 48),
 
