@@ -198,7 +198,10 @@ class _NewsPageState extends State<NewsPage> {
           const SizedBox(width: 4),
         ],
       ),
-      endDrawer: const RightDrawer(),
+      endDrawer: RightDrawer(
+        isAdmin: widget.isAdmin,
+        isSuperuser: widget.isAdmin,
+      ),
       body: Column(
         children: [
           NewsHeader(
