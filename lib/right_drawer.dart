@@ -4,10 +4,15 @@ import 'merch/merch_page.dart';
 import 'news/newspage.dart';
 import 'schedule/macth_list.dart';
 
-/// Placeholder right drawer navigation.
-/// Buttons are non-functional for now; wire navigation later.
 class RightDrawer extends StatelessWidget {
-  const RightDrawer({super.key});
+  const RightDrawer({
+    super.key,
+    this.isAdmin = false,
+    this.isSuperuser = false,
+  });
+
+  final bool isAdmin;
+  final bool isSuperuser;
 
   @override
   Widget build(BuildContext context) {

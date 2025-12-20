@@ -87,7 +87,7 @@ class TicketApiService {
     this.baseUrl = _defaultBaseUrl,
   }) : _client = client ?? http.Client();
 
-  static const String _defaultBaseUrl = 'https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id';
+  static const String _defaultBaseUrl = 'http://localhost:8000';
 
   final http.Client _client;
   final String baseUrl;

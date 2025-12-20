@@ -257,7 +257,7 @@ class _TicketViewPageState extends State<TicketViewPage> {
             crossAxisCount: columns,
             mainAxisSpacing: 12,
             crossAxisSpacing: 12,
-            childAspectRatio: 1.05,
+            childAspectRatio: 1.6, // wider cards, less vertical whitespace
           ),
           itemBuilder: (context, index) {
             final m = items[index];

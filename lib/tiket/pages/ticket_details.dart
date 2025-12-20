@@ -182,12 +182,12 @@ class _TicketDetailsPageState extends State<TicketDetailsPage> {
             crossAxisCount: columns,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: 1.8,
+            childAspectRatio: 2.3, // wider than tall, tighter cards
           ),
           itemBuilder: (context, index) {
             final link = links[index];
             return Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(10),
               decoration: _cardDecoration(),
               child: Row(
                 children: [
@@ -196,8 +196,8 @@ class _TicketDetailsPageState extends State<TicketDetailsPage> {
                       borderRadius: BorderRadius.circular(8),
                       child: Image.network(
                         link.imgVendor,
-                        width: 40,
-                        height: 40,
+                        width: 36,
+                        height: 36,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => const Icon(Icons.store, color: Color(0xFFB91C1C)),
                       ),
@@ -215,11 +215,13 @@ class _TicketDetailsPageState extends State<TicketDetailsPage> {
                             fontWeight: FontWeight.w700,
                             fontSize: 14,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 3),
                         Text(
                           _formatPrice(link.price),
-                          style: const TextStyle(color: Color(0xFF4B5563), fontSize: 13),
+                          style: const TextStyle(color: Color(0xFF4B5563), fontSize: 12.5),
                         ),
                       ],
                     ),
