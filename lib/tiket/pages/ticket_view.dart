@@ -122,6 +122,12 @@ class _TicketViewPageState extends State<TicketViewPage> {
           ],
         ),
         actions: [
+          if (widget.canManage)
+            IconButton(
+              onPressed: () => _openMatchForm(request),
+              icon: const Icon(Icons.add, color: Colors.black),
+              tooltip: 'Create Ticket',
+            ),
           Builder(
             builder: (ctx) => IconButton(
               onPressed: () => Scaffold.of(ctx).openEndDrawer(),
@@ -129,12 +135,6 @@ class _TicketViewPageState extends State<TicketViewPage> {
               tooltip: 'Menu',
             ),
           ),
-          if (widget.canManage)
-            IconButton(
-              onPressed: () => _openMatchForm(request),
-              icon: const Icon(Icons.add, color: Colors.black),
-              tooltip: 'Create Ticket',
-            ),
           const SizedBox(width: 4),
         ],
       ),
@@ -279,6 +279,11 @@ class _TicketViewPageState extends State<TicketViewPage> {
   }
 
   void _openDetail(TicketMatch match) {
+    final request = context.read<CookieRequest>();
+    if (!request.loggedIn) {
+      Navigator.pushReplacementNamed(context, '/');
+      return;
+    }
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -303,12 +308,17 @@ class _TicketViewPageState extends State<TicketViewPage> {
             onSubmit: (payload) async {
               if (!widget.canManage) return false;
               if (match == null) {
-                return _service.createMatch(request: request, payload: payload);
+                return _service.createMatch(
+                  request: request,
+                  payload: payload,
+                  isAdmin: widget.canManage,
+                );
               }
               return _service.updateMatch(
                 request: request,
                 matchUuid: match.matchId,
                 payload: payload,
+                isAdmin: widget.canManage,
               );
             },
           ),
@@ -340,6 +350,7 @@ class _TicketViewPageState extends State<TicketViewPage> {
                 request: request,
                 matchUuid: match.matchId,
                 payload: payload,
+                isAdmin: widget.canManage,
               );
             },
           ),
@@ -373,7 +384,11 @@ class _TicketViewPageState extends State<TicketViewPage> {
       ),
     );
     if (ok == true) {
-      final success = await _service.deleteMatch(request: request, matchUuid: match.matchId);
+      final success = await _service.deleteMatch(
+        request: request,
+        matchUuid: match.matchId,
+        isAdmin: widget.canManage,
+      );
       if (success) {
         await _loadMatches();
         if (mounted) {
@@ -411,7 +426,11 @@ class _TicketViewPageState extends State<TicketViewPage> {
       ),
     );
     if (ok == true) {
-      final success = await _service.deleteLink(request: request, linkUuid: link.linkId);
+      final success = await _service.deleteLink(
+        request: request,
+        linkUuid: link.linkId,
+        isAdmin: widget.canManage,
+      );
       if (success) {
         await _loadMatches();
         if (mounted) {

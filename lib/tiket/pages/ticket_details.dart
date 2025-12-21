@@ -342,6 +342,7 @@ class _TicketDetailsPageState extends State<TicketDetailsPage> {
                 request: request,
                 matchUuid: widget.matchUuid,
                 payload: payload,
+                isAdmin: widget.canManage,
               );
             },
           ),
@@ -374,6 +375,7 @@ class _TicketDetailsPageState extends State<TicketDetailsPage> {
                 request: request,
                 matchUuid: widget.matchUuid,
                 payload: payload,
+                isAdmin: widget.canManage,
               );
             },
           ),
@@ -410,7 +412,11 @@ class _TicketDetailsPageState extends State<TicketDetailsPage> {
       ),
     );
     if (ok == true) {
-      final success = await _service.deleteMatch(request: request, matchUuid: widget.matchUuid);
+      final success = await _service.deleteMatch(
+        request: request,
+        matchUuid: widget.matchUuid,
+        isAdmin: widget.canManage,
+      );
       if (success && mounted) {
         Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -441,7 +447,11 @@ class _TicketDetailsPageState extends State<TicketDetailsPage> {
       ),
     );
     if (ok == true) {
-      final success = await _service.deleteLink(request: request, linkUuid: link.linkId);
+      final success = await _service.deleteLink(
+        request: request,
+        linkUuid: link.linkId,
+        isAdmin: widget.canManage,
+      );
       if (success) {
         await _loadDetail();
         if (mounted) {

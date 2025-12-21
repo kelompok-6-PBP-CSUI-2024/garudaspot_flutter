@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
 
 import 'merch/merch_page.dart';
 import 'news/newspage.dart';
@@ -79,7 +81,20 @@ class RightDrawer extends StatelessWidget {
           );
         }
         else if (label == 'Forum') {
-          Navigator.pushNamed(context, '/forum');
+          final request = context.read<CookieRequest>();
+          if (!request.loggedIn) {
+            Navigator.pushReplacementNamed(context, '/');
+            return;
+          }
+          final username = request.jsonData['username'];
+          Navigator.pushNamed(
+            context,
+            '/forum',
+            arguments: {
+              'username': username is String ? username : '',
+              'isAdmin': isAdmin || isSuperuser,
+            },
+          );
         }
       },
     );

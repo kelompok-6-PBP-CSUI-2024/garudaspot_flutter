@@ -12,6 +12,7 @@ import 'pages/post_detail_page.dart';
 // pakai widget terpisah
 import 'widgets/post_card.dart';
 import 'widgets/desktop_category_item.dart';
+import 'widgets/forum_header.dart';
 
 class ForumPage extends StatefulWidget {
   final String username;
@@ -31,7 +32,7 @@ class ForumPage extends StatefulWidget {
 }
 
 class _ForumPageState extends State<ForumPage> {
-  static const String _baseUrl = 'http://localhost:8000/forum';
+  static const String _baseUrl = 'https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/forum';
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -50,7 +51,8 @@ class _ForumPageState extends State<ForumPage> {
     final request = context.read<CookieRequest>();
     final u = request.jsonData['username'];
     if (u is String && u.isNotEmpty) return u;
-    return widget.username;
+    if (widget.username.isNotEmpty) return widget.username;
+    return 'Guest';
   }
 
   // superuser yang valid dari session (prioritas)
@@ -102,10 +104,13 @@ class _ForumPageState extends State<ForumPage> {
       final resp = await request.get('$_baseUrl/api/posts/');
 
       final List list;
-      if (resp is Map<String, dynamic> && resp['results'] is List) {
-        list = resp['results'] as List;
+      if (resp is Map<String, dynamic>) {
+        final dynamic results = resp['results'] ?? resp['items'];
+        list = results is List ? results : [];
+      } else if (resp is List) {
+        list = resp;
       } else {
-        list = resp as List;
+        list = [];
       }
 
       setState(() {
@@ -153,6 +158,7 @@ class _ForumPageState extends State<ForumPage> {
           'title': title, // jangan ada suffix random
           'content': content,
           'category': category,
+          'author': _currentUsername,
         }),
       );
 
@@ -216,9 +222,11 @@ class _ForumPageState extends State<ForumPage> {
   Future<void> _deletePost(String slug) async {
     try {
       final request = context.read<CookieRequest>();
-      final resp = await request.post(
+      final resp = await request.postJson(
         '$_baseUrl/api/posts/$slug/delete/',
-        {},
+        jsonEncode({
+          'is_admin': _isSuperuser,
+        }),
       );
 
       if (resp is Map && resp['ok'] == true) {
@@ -341,28 +349,44 @@ class _ForumPageState extends State<ForumPage> {
     return Scaffold(
       key: _scaffoldKey,
       endDrawer: const RightDrawer(),
-      backgroundColor: const Color(0xFF3A3A3A),
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(60),
-        child: Container(
-          color: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('Garuda Spot', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-              Row(
-                children: [
-                  IconButton(onPressed: _openPostDialog, icon: const Icon(Icons.add_comment_outlined)),
-                  IconButton(
-                    onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
-                    icon: const Icon(Icons.menu),
-                  ),
-                ],
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        titleSpacing: 12,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              'assets/images/logo_top.png',
+              height: 32,
+            ),
+            const SizedBox(width: 8),
+            const Text(
+              'Garuda Spot',
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
+        actions: [
+          IconButton(
+            onPressed: _openPostDialog,
+            icon: const Icon(Icons.add_comment_outlined, color: Colors.black),
+            tooltip: 'Add Post',
+          ),
+          Builder(
+            builder: (ctx) => IconButton(
+              onPressed: () => Scaffold.of(ctx).openEndDrawer(),
+              icon: const Icon(Icons.menu, color: Colors.black),
+              tooltip: 'Menu',
+            ),
+          ),
+          const SizedBox(width: 4),
+        ],
       ),
       body: isDesktop ? _buildDesktopLayout() : _buildMobileLayout(),
     );
@@ -414,15 +438,13 @@ class _ForumPageState extends State<ForumPage> {
   Widget _buildMobileLayout() {
     return Column(
       children: [
+        const ForumHeader(),
         Container(
-          height: 220,
           width: double.infinity,
           color: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 16),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text('FORUM', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 12),
               const Text('Filter', style: TextStyle(letterSpacing: 4)),
               const SizedBox(height: 12),
               Container(width: 120, height: 3, color: Colors.red),

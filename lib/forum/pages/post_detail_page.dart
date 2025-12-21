@@ -20,7 +20,7 @@ class PostDetailPage extends StatefulWidget {
 }
 
 class _PostDetailPageState extends State<PostDetailPage> {
-  static const String _baseUrl = 'http://localhost:8000/forum';
+  static const String _baseUrl = 'https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/forum';
 
   Map<String, dynamic>? post;
   List<Map<String, dynamic>> comments = [];
@@ -32,6 +32,14 @@ class _PostDetailPageState extends State<PostDetailPage> {
     final request = context.read<CookieRequest>();
     // Cek field 'is_superuser' di jsonData yang dikembalikan Django saat login
     return request.jsonData['is_superuser'] ?? widget.isAdmin;
+  }
+
+  String get _currentUsername {
+    final request = context.read<CookieRequest>();
+    final u = request.jsonData['username'];
+    if (u is String && u.isNotEmpty) return u;
+    if (widget.username.isNotEmpty) return widget.username;
+    return 'Guest';
   }
 
   @override
@@ -76,7 +84,10 @@ class _PostDetailPageState extends State<PostDetailPage> {
       final request = context.read<CookieRequest>();
       final resp = await request.postJson(
         '$_baseUrl/api/posts/$slug/comments/',
-        jsonEncode({'content': text}),
+        jsonEncode({
+          'content': text,
+          'author': _currentUsername,
+        }),
       );
 
       if (resp['id'] != null) {
@@ -97,9 +108,11 @@ class _PostDetailPageState extends State<PostDetailPage> {
 
     try {
       final request = context.read<CookieRequest>();
-      final resp = await request.post(
+      final resp = await request.postJson(
         '$_baseUrl/api/comments/$commentId/delete/',
-        {},
+        jsonEncode({
+          'is_admin': _isAdminStatus,
+        }),
       );
 
       if (resp['ok'] == true) {

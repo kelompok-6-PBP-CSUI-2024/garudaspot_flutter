@@ -7,7 +7,7 @@ import '../model/forum_post.dart';
 class ForumService {
 
   static String get baseUrl {
-    if (kIsWeb) return 'http://localhost:8000/forum';
+    if (kIsWeb) return 'https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/forum';
     return 'http://10.0.2.2:8000/forum';
   }
 
