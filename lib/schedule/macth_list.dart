@@ -8,10 +8,10 @@ import 'package:provider/provider.dart';
 
 import 'model/match.dart'; 
 import 'match_detail.dart';
-import 'match_form.dart'; 
 import '../right_drawer.dart'; 
 
 class MatchListPage extends StatefulWidget {
+  // Menerima parameter isAdmin dari halaman sebelumnya
   const MatchListPage({super.key, this.isAdmin = false});
 
   final bool isAdmin;
@@ -21,7 +21,7 @@ class MatchListPage extends StatefulWidget {
 }
 
 class _MatchListPageState extends State<MatchListPage> {
-  // Ganti URL sesuai environment
+  // Sesuaikan URL: localhost untuk Web/iOS, 10.0.2.2 untuk Android Emulator
   static const String _baseUrl = 'http://localhost:8000/schedule/api/match/';
   
   final List<Match> _matches = [];
@@ -136,28 +136,13 @@ class _MatchListPageState extends State<MatchListPage> {
     await _loadMatches(reset: true);
   }
 
-  // --- Navigasi: Create Match ---
-  void _openAddPage() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const MatchFormPage()),
+  // --- LOGIC DIALOG / POPUP ---
+  void _openFormDialog({Match? match}) async {
+    await showDialog(
+      context: context,
+      builder: (context) => MatchFormDialog(match: match),
     );
-    if (result == true) {
-      _loadMatches(reset: true);
-    }
-  }
-
-  // --- Navigasi: Edit Match ---
-  void _openEditPage(Match match) async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => MatchFormPage(match: match), 
-      ),
-    );
-    if (result == true) {
-      _loadMatches(reset: true);
-    }
+    _loadMatches(reset: true);
   }
 
   @override
@@ -165,7 +150,7 @@ class _MatchListPageState extends State<MatchListPage> {
     final request = context.watch<CookieRequest>();
 
     return Scaffold(
-      backgroundColor: Colors.white, // Background Scaffold Putih
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -200,9 +185,10 @@ class _MatchListPageState extends State<MatchListPage> {
               tooltip: 'Menu',
             ),
           ),
+          
           if (widget.isAdmin)
             IconButton(
-              onPressed: _openAddPage,
+              onPressed: () => _openFormDialog(), 
               icon: const Icon(Icons.add, color: Colors.black),
               tooltip: 'Add Match',
             ),
@@ -307,15 +293,12 @@ class _MatchListPageState extends State<MatchListPage> {
           final item = _matches[index];
           
           return Card(
-            // === SETTING CARD AGAR PUTIH, NO GAP, & FLAT ===
             color: Colors.white, 
             elevation: 0, 
-            margin: EdgeInsets.zero, // Menghilangkan gap bawaan Card
+            margin: EdgeInsets.zero, 
             shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.zero, // Agar sudut menyatu rapi
+              borderRadius: BorderRadius.zero, 
             ),
-            // ===============================================
-            
             child: InkWell(
               onTap: () {
                 Navigator.push(
@@ -334,7 +317,6 @@ class _MatchListPageState extends State<MatchListPage> {
                   padding: const EdgeInsets.all(12.0),
                   child: Column(
                     children: [
-                      // --- TOP ROW: Kategori, Tanggal, & Action Buttons ---
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -366,7 +348,7 @@ class _MatchListPageState extends State<MatchListPage> {
                                     IconButton(
                                       constraints: const BoxConstraints(),
                                       padding: const EdgeInsets.only(left: 8),
-                                      onPressed: () => _openEditPage(item),
+                                      onPressed: () => _openFormDialog(match: item), 
                                       icon: Icon(Icons.edit_outlined, color: Colors.blue.shade700, size: 20),
                                       tooltip: 'Edit',
                                     ),
@@ -383,8 +365,6 @@ class _MatchListPageState extends State<MatchListPage> {
                           ),
                         ],
                       ),
-
-                      // --- MIDDLE ROW: Score ---
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
                         child: Row(
@@ -422,8 +402,6 @@ class _MatchListPageState extends State<MatchListPage> {
                           ],
                         ),
                       ),
-                      
-                      // --- BOTTOM ROW: Location ---
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -442,7 +420,6 @@ class _MatchListPageState extends State<MatchListPage> {
             ),
           );
         },
-        // Pastikan separator juga 0
         separatorBuilder: (_, __) => const SizedBox(height: 0),
         itemCount: _matches.length,
       ),
@@ -509,4 +486,255 @@ class _MatchResponse {
   const _MatchResponse({required this.items, required this.hasNext});
   final List<Match> items;
   final bool hasNext;
+}
+
+// ==========================================================
+// KELAS BARU: MatchFormDialog (POPUP FORM) - FIXED TYPES
+// ==========================================================
+
+class MatchFormDialog extends StatefulWidget {
+  final Match? match;
+  const MatchFormDialog({super.key, this.match});
+
+  @override
+  State<MatchFormDialog> createState() => _MatchFormDialogState();
+}
+
+class _MatchFormDialogState extends State<MatchFormDialog> {
+  final _formKey = GlobalKey<FormState>();
+
+  // --- Controllers ---
+  final _homeTeamController = TextEditingController();
+  final _awayTeamController = TextEditingController();
+  final _locationController = TextEditingController();
+  final _dateController = TextEditingController();
+  final _homeScoreController = TextEditingController();
+  final _awayScoreController = TextEditingController();
+  
+  // Stats Controllers
+  final _shotsHome = TextEditingController();
+  final _shotsAway = TextEditingController();
+  final _possessionHome = TextEditingController();
+  final _possessionAway = TextEditingController();
+  final _passesHome = TextEditingController();
+  final _passesAway = TextEditingController();
+  final _foulsHome = TextEditingController();
+  final _foulsAway = TextEditingController();
+  final _yellowHome = TextEditingController();
+  final _yellowAway = TextEditingController();
+  final _redHome = TextEditingController();
+  final _redAway = TextEditingController();
+  final _cornersHome = TextEditingController();
+  final _cornersAway = TextEditingController();
+  final _offsidesHome = TextEditingController();
+  final _offsidesAway = TextEditingController();
+
+  String _category = 'Friendly Match';
+  DateTime? _selectedDate;
+
+  final List<String> _categories = [
+    'Friendly Match', 'FIFA Matchday A', 'FIFA Matchday B',
+    'AFF Championship', 'AFC Qualifiers', 'AFC Cup',
+    'World Cup Qualifiers', 'World Cup', 'Other'
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Jika Mode Edit: Isi form dengan data lama
+    if (widget.match != null) {
+      final m = widget.match!;
+      _homeTeamController.text = m.homeTeam;
+      _awayTeamController.text = m.awayTeam;
+      _locationController.text = m.location;
+      
+      _selectedDate = m.matchDate;
+      _dateController.text = "${m.matchDate.year}-${m.matchDate.month.toString().padLeft(2,'0')}-${m.matchDate.day.toString().padLeft(2,'0')}";
+
+      if (_categories.contains(m.category)) _category = m.category;
+      
+      String str(int? val) => val?.toString() ?? '';
+      _homeScoreController.text = str(m.homeScore);
+      _awayScoreController.text = str(m.awayScore);
+      
+      // Stats
+      _shotsHome.text = str(m.shotsHome); _shotsAway.text = str(m.shotsAway);
+      _possessionHome.text = str(m.possessionHome); _possessionAway.text = str(m.possessionAway);
+      _passesHome.text = str(m.passesHome); _passesAway.text = str(m.passesAway);
+      _foulsHome.text = str(m.foulsHome); _foulsAway.text = str(m.foulsAway);
+      _yellowHome.text = str(m.yellowCardsHome); _yellowAway.text = str(m.yellowCardsAway);
+      _redHome.text = str(m.redCardsHome); _redAway.text = str(m.redCardsAway);
+      _cornersHome.text = str(m.cornersHome); _cornersAway.text = str(m.cornersAway);
+      _offsidesHome.text = str(m.offsidesHome); _offsidesAway.text = str(m.offsidesAway);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final request = context.read<CookieRequest>();
+    final isEdit = widget.match != null;
+
+    return AlertDialog(
+      title: Text(isEdit ? "Edit Match" : "Add Match"),
+      scrollable: true, 
+      content: SizedBox(
+        width: double.maxFinite,
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+               TextFormField(
+                controller: _homeTeamController,
+                decoration: const InputDecoration(labelText: "Home Team", isDense: true),
+                validator: (v) => v!.isEmpty ? "Required" : null,
+              ),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _awayTeamController,
+                decoration: const InputDecoration(labelText: "Away Team", isDense: true),
+                validator: (v) => v!.isEmpty ? "Required" : null,
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(child: TextFormField(controller: _homeScoreController, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: "Home Score", isDense: true))),
+                  const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text("-")),
+                  Expanded(child: TextFormField(controller: _awayScoreController, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: "Away Score", isDense: true))),
+                ],
+              ),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _locationController,
+                decoration: const InputDecoration(labelText: "Location", isDense: true),
+                validator: (v) => v!.isEmpty ? "Required" : null,
+              ),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _dateController,
+                decoration: const InputDecoration(labelText: "Date", isDense: true),
+                readOnly: true,
+                onTap: () async {
+                  DateTime? picked = await showDatePicker(
+                    context: context,
+                    initialDate: _selectedDate ?? DateTime.now(),
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime(2100),
+                  );
+                  if (picked != null) {
+                    setState(() {
+                      _selectedDate = picked;
+                      _dateController.text = "${picked.year}-${picked.month.toString().padLeft(2,'0')}-${picked.day.toString().padLeft(2,'0')}";
+                    });
+                  }
+                },
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                value: _categories.contains(_category) ? _category : _categories[0],
+                isExpanded: true,
+                items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c, overflow: TextOverflow.ellipsis))).toList(),
+                onChanged: (v) => setState(() => _category = v!),
+              ),
+              const Divider(),
+              const Text("Stats (Optional)", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+              _statRow("Shots", _shotsHome, _shotsAway),
+              _statRow("Possession", _possessionHome, _possessionAway),
+              _statRow("Passes", _passesHome, _passesAway),
+              _statRow("Fouls", _foulsHome, _foulsAway),
+              _statRow("Yellow Cards", _yellowHome, _yellowAway),
+              _statRow("Red Cards", _redHome, _redAway),
+              _statRow("Corners", _cornersHome, _cornersAway),
+              _statRow("Offsides", _offsidesHome, _offsidesAway),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+        ElevatedButton(
+          onPressed: () async {
+            if (_formKey.currentState!.validate()) {
+              
+              // Helper: Ubah ke int dulu (validasi), lalu .toString()
+              int pInt(String v) => v.isEmpty ? 0 : int.tryParse(v) ?? 0;
+              
+              final payload = {
+                'home_team': _homeTeamController.text,
+                'away_team': _awayTeamController.text,
+                'location': _locationController.text,
+                'match_date': _dateController.text,
+                'category': _category,
+                
+                // Tambahkan .toString() agar dikirim sebagai String!
+                'home_score': pInt(_homeScoreController.text).toString(),
+                'away_score': pInt(_awayScoreController.text).toString(),
+                
+                // Stats
+                'shots_home': pInt(_shotsHome.text).toString(), 
+                'shots_away': pInt(_shotsAway.text).toString(),
+                
+                'possession_home': pInt(_possessionHome.text).toString(), 
+                'possession_away': pInt(_possessionAway.text).toString(),
+                
+                'passes_home': pInt(_passesHome.text).toString(), 
+                'passes_away': pInt(_passesAway.text).toString(),
+                
+                'fouls_home': pInt(_foulsHome.text).toString(), 
+                'fouls_away': pInt(_foulsAway.text).toString(),
+                
+                'yellow_cards_home': pInt(_yellowHome.text).toString(), 
+                'yellow_cards_away': pInt(_yellowAway.text).toString(),
+                
+                'red_cards_home': pInt(_redHome.text).toString(), 
+                'red_cards_away': pInt(_redAway.text).toString(),
+                
+                'corners_home': pInt(_cornersHome.text).toString(), 
+                'corners_away': pInt(_cornersAway.text).toString(),
+                
+                'offsides_home': pInt(_offsidesHome.text).toString(), 
+                'offsides_away': pInt(_offsidesAway.text).toString(),
+              };
+
+              final url = isEdit
+                  ? "http://localhost:8000/schedule/api/match/edit/${widget.match!.id}/"
+                  : "http://localhost:8000/schedule/api/match/add/";
+
+              try {
+                final response = await request.post(url, payload);
+
+                if (context.mounted) {
+                  // Cek respon sukses
+                  if (response['id'] != null || response['status'] == 'success') {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(isEdit ? "Updated" : "Saved")));
+                    Navigator.pop(context); // Tutup dialog jika sukses
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Failed to save data")));
+                  }
+                }
+              } catch (e) {
+                print("Error saving: $e");
+                if (context.mounted) {
+                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+                }
+              }
+            }
+          },
+          child: const Text("Save"),
+        )
+      ],
+    );
+  }
+
+  Widget _statRow(String label, TextEditingController h, TextEditingController a) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Expanded(child: TextFormField(controller: h, keyboardType: TextInputType.number, textAlign: TextAlign.center, decoration: const InputDecoration(hintText: "0", isDense: true, contentPadding: EdgeInsets.all(8), border: OutlineInputBorder()))),
+          SizedBox(width: 80, child: Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 11))),
+          Expanded(child: TextFormField(controller: a, keyboardType: TextInputType.number, textAlign: TextAlign.center, decoration: const InputDecoration(hintText: "0", isDense: true, contentPadding: EdgeInsets.all(8), border: OutlineInputBorder()))),
+        ],
+      ),
+    );
+  }
 }

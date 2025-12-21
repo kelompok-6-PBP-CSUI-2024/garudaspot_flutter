@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'dart:convert';
-import 'model/match.dart'; // Pastikan import model Match benar
+import 'model/match.dart'; 
 
 class MatchFormPage extends StatefulWidget {
   // Parameter opsional untuk mode Edit
@@ -42,6 +42,12 @@ class _MatchFormPageState extends State<MatchFormPage> {
   final _yellowAway = TextEditingController();
   final _redHome = TextEditingController();
   final _redAway = TextEditingController();
+  
+  // === 1. TAMBAHAN CONTROLLER BARU ===
+  final _cornersHome = TextEditingController();
+  final _cornersAway = TextEditingController();
+  final _offsidesHome = TextEditingController();
+  final _offsidesAway = TextEditingController();
 
   // State Variables
   String _category = 'Friendly Match';
@@ -74,7 +80,7 @@ class _MatchFormPageState extends State<MatchFormPage> {
       _selectedDate = m.matchDate;
       _dateController.text = "${m.matchDate.year}-${m.matchDate.month.toString().padLeft(2,'0')}-${m.matchDate.day.toString().padLeft(2,'0')}";
 
-      // Set Category (Pastikan value ada di list)
+      // Set Category
       if (_categories.contains(m.category)) {
         _category = m.category;
       } else {
@@ -87,15 +93,25 @@ class _MatchFormPageState extends State<MatchFormPage> {
       _homeScoreController.text = str(m.homeScore);
       _awayScoreController.text = str(m.awayScore);
 
-      /* NOTE: Bagian ini mengasumsikan Model Match kamu memiliki field statistics.
-         Jika Model Match kamu belum update, kode di bawah mungkin error.
-         Uncomment jika field sudah ada di model/match.dart
-      */
-      // _shotsHome.text = str(m.shotsHome);
-      // _shotsAway.text = str(m.shotsAway);
-      // _possessionHome.text = str(m.possessionHome);
-      // _possessionAway.text = str(m.possessionAway);
-      // ... lanjutkan untuk stats lain jika perlu ...
+      // Isi Controller Stats
+      _shotsHome.text = str(m.shotsHome);
+      _shotsAway.text = str(m.shotsAway);
+      _possessionHome.text = str(m.possessionHome);
+      _possessionAway.text = str(m.possessionAway);
+      _passesHome.text = str(m.passesHome);
+      _passesAway.text = str(m.passesAway);
+      _foulsHome.text = str(m.foulsHome);
+      _foulsAway.text = str(m.foulsAway);
+      _yellowHome.text = str(m.yellowCardsHome);
+      _yellowAway.text = str(m.yellowCardsAway);
+      _redHome.text = str(m.redCardsHome);
+      _redAway.text = str(m.redCardsAway);
+      
+      // === 2. ISI DATA EDIT ===
+      _cornersHome.text = str(m.cornersHome);
+      _cornersAway.text = str(m.cornersAway);
+      _offsidesHome.text = str(m.offsidesHome);
+      _offsidesAway.text = str(m.offsidesAway);
     }
   }
 
@@ -107,12 +123,19 @@ class _MatchFormPageState extends State<MatchFormPage> {
     _dateController.dispose();
     _homeScoreController.dispose();
     _awayScoreController.dispose();
+    
+    // Dispose Stats
     _shotsHome.dispose(); _shotsAway.dispose();
     _possessionHome.dispose(); _possessionAway.dispose();
     _passesHome.dispose(); _passesAway.dispose();
     _foulsHome.dispose(); _foulsAway.dispose();
     _yellowHome.dispose(); _yellowAway.dispose();
     _redHome.dispose(); _redAway.dispose();
+    
+    // === 3. DISPOSE CONTROLLER BARU ===
+    _cornersHome.dispose(); _cornersAway.dispose();
+    _offsidesHome.dispose(); _offsidesAway.dispose();
+    
     super.dispose();
   }
 
@@ -146,7 +169,6 @@ class _MatchFormPageState extends State<MatchFormPage> {
   @override
   Widget build(BuildContext context) {
     final request = context.watch<CookieRequest>();
-    // Ubah Judul Halaman Sesuai Mode
     final isEdit = widget.match != null;
     final pageTitle = isEdit ? "Edit Match" : "Add New Match";
 
@@ -164,7 +186,7 @@ class _MatchFormPageState extends State<MatchFormPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ================= BASIC INFO =================
+              // ... (Bagian Basic Info sama seperti sebelumnya) ...
               const Text("Match Details", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
               
@@ -272,6 +294,10 @@ class _MatchFormPageState extends State<MatchFormPage> {
               _buildStatRow("Yellow Cards", _yellowHome, _yellowAway),
               _buildStatRow("Red Cards", _redHome, _redAway),
               
+              // === 4. TAMBAHAN UI CORNERS & OFFSIDES ===
+              _buildStatRow("Corners", _cornersHome, _cornersAway),
+              _buildStatRow("Offsides", _offsidesHome, _offsidesAway),
+              
               const SizedBox(height: 24),
 
               // ================= SUBMIT BUTTON =================
@@ -295,6 +321,8 @@ class _MatchFormPageState extends State<MatchFormPage> {
                         'category': _category,
                         'home_score': parseInt(_homeScoreController.text),
                         'away_score': parseInt(_awayScoreController.text),
+                        
+                        // Stats
                         'shots_home': parseInt(_shotsHome.text),
                         'shots_away': parseInt(_shotsAway.text),
                         'possession_home': parseInt(_possessionHome.text),
@@ -307,9 +335,14 @@ class _MatchFormPageState extends State<MatchFormPage> {
                         'yellow_cards_away': parseInt(_yellowAway.text),
                         'red_cards_home': parseInt(_redHome.text),
                         'red_cards_away': parseInt(_redAway.text),
+                        
+                        // === 5. KIRIM DATA BARU ===
+                        'corners_home': parseInt(_cornersHome.text),
+                        'corners_away': parseInt(_cornersAway.text),
+                        'offsides_home': parseInt(_offsidesHome.text),
+                        'offsides_away': parseInt(_offsidesAway.text),
                       };
 
-                      // Tentukan URL berdasarkan apakah ini Edit atau Add
                       final url = isEdit
                           ? "http://localhost:8000/schedule/api/match/edit/${widget.match!.id}/"
                           : "http://localhost:8000/schedule/api/match/add/";
@@ -320,13 +353,11 @@ class _MatchFormPageState extends State<MatchFormPage> {
                       );
 
                       if (context.mounted) {
-                        // Cek indikator sukses dari Backend (sesuaikan key JSON response kamu)
-                        // Biasanya 'id' atau 'status': 'success'
                         if (response['id'] != null || response['status'] == 'success') {
                           ScaffoldMessenger.of(context).showSnackBar(
                              SnackBar(content: Text(isEdit ? "Match updated!" : "Match saved!")),
                           );
-                          Navigator.pop(context, true); // Return true agar List refresh
+                          Navigator.pop(context, true); 
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text("Gagal menyimpan data.")),
