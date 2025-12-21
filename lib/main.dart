@@ -10,6 +10,7 @@ import 'news/newspage.dart';
 import 'merch/merch_page.dart';
 import 'Squad/player.dart';
 import 'forum/forum_page.dart';
+import 'tiket/pages/ticket_view.dart';
 
 void main() {
   runApp(const MyApp());
@@ -20,7 +21,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return Provider(
       create: (_) => CookieRequest(),
       child: MaterialApp(
@@ -37,8 +37,8 @@ class MyApp extends StatelessWidget {
           '/schedule': (_) => const MatchListPage(),
           '/Squad': (_) => const SquadPage(),
         },
-
         onGenerateRoute: (settings) {
+          // Route: forum
           if (settings.name == '/forum') {
             final args = settings.arguments as Map<String, dynamic>?;
 
@@ -52,12 +52,29 @@ class MyApp extends StatelessWidget {
               ),
             );
           }
+
+          // Route: ticket
+          if (settings.name == '/ticket') {
+            final args = settings.arguments;
+            bool isAdmin = false;
+            bool isSuperuser = false;
+
+            if (args is Map) {
+              isAdmin = args['isAdmin'] == true;
+              isSuperuser = args['isSuperuser'] == true;
+            }
+
+            return MaterialPageRoute(
+              builder: (_) => TicketViewPage(
+                isAdmin: isAdmin,
+                isSuperuser: isSuperuser,
+              ),
+            );
+          }
+
           return null;
-        }
-
+        },
       ),
-
     );
-
   }
 }

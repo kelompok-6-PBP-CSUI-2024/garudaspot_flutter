@@ -255,7 +255,7 @@ class _MatchFormPageState extends State<MatchFormPage> {
               const SizedBox(height: 12),
 
               DropdownButtonFormField<String>(
-                value: _categories.contains(_category) ? _category : _categories[0],
+                initialValue: _categories.contains(_category) ? _category : _categories[0],
                 decoration: const InputDecoration(labelText: "Category", border: OutlineInputBorder(), prefixIcon: Icon(Icons.category)),
                 items: _categories.map((String category) {
                   return DropdownMenuItem<String>(

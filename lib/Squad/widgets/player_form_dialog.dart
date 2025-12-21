@@ -53,7 +53,7 @@ class _PlayerFormDialogState extends State<PlayerFormDialog> {
     assists = TextEditingController(text: widget.player?.assists.toString() ?? '0');
 
     if (widget.player != null && widget.player!.positions.isNotEmpty) {
-      pos1 = widget.player!.positions.length > 0 ? widget.player!.positions[0] : '';
+      pos1 = widget.player!.positions.isNotEmpty ? widget.player!.positions[0] : '';
       pos2 = widget.player!.positions.length > 1 ? widget.player!.positions[1] : '';
       pos3 = widget.player!.positions.length > 2 ? widget.player!.positions[2] : '';
     }
@@ -162,7 +162,7 @@ class _PlayerFormDialogState extends State<PlayerFormDialog> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: DropdownButtonFormField<String>(
-        value: value.isEmpty ? null : value,
+        initialValue: value.isEmpty ? null : value,
         decoration: InputDecoration(labelText: label),
         items: positions
             .map((p) => DropdownMenuItem(

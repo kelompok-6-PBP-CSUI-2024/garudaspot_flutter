@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
+import 'dart:convert';
 
 class PostDetailPage extends StatefulWidget {
   final String username;
+  final bool isAdmin; // Tetap simpan sebagai cadangan
   final Map<String, dynamic> initialPost;
 
   const PostDetailPage({
     super.key,
     required this.username,
+    required this.isAdmin,
     required this.initialPost,
   });
 
@@ -15,45 +20,103 @@ class PostDetailPage extends StatefulWidget {
 }
 
 class _PostDetailPageState extends State<PostDetailPage> {
+  static const String _baseUrl = 'http://localhost:8000/forum';
+
   Map<String, dynamic>? post;
-  List<Map<String, String>> comments = [];
+  List<Map<String, dynamic>> comments = [];
   final TextEditingController _commentController = TextEditingController();
+  bool _isLoading = false;
+
+  // GETTER BARU: Mengambil status admin langsung dari session CookieRequest
+  bool get _isAdminStatus {
+    final request = context.read<CookieRequest>();
+    // Cek field 'is_superuser' di jsonData yang dikembalikan Django saat login
+    return request.jsonData['is_superuser'] ?? widget.isAdmin;
+  }
 
   @override
   void initState() {
     super.initState();
     post = Map<String, dynamic>.from(widget.initialPost);
-    final rawComments = post!['comments'];
-    if (rawComments is List) {
-      comments = rawComments.map((e) => Map<String, String>.from(e as Map)).toList();
-    } else {
-      comments = <Map<String, String>>[];
+    _loadDetail();
+  }
+
+  Future<void> _loadDetail() async {
+    final slug = (post?['slug'] ?? '').toString();
+    if (slug.isEmpty) return;
+
+    setState(() => _isLoading = true);
+    try {
+      final request = context.read<CookieRequest>();
+      final resp = await request.get('$_baseUrl/api/posts/$slug/');
+
+      if (resp is Map<String, dynamic>) {
+        setState(() {
+          post = Map<String, dynamic>.from(resp['post']);
+          comments = List<Map<String, dynamic>>.from(resp['comments']);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal memuat data: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _addComment() {
-    if (_commentController.text.trim().isEmpty) return;
+  Future<void> _addComment() async {
+    final text = _commentController.text.trim();
+    if (text.isEmpty) return;
 
-    final now = DateTime.now();
-    const monthNamesShort = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    final slug = (post?['slug'] ?? '').toString();
+    try {
+      final request = context.read<CookieRequest>();
+      final resp = await request.postJson(
+        '$_baseUrl/api/posts/$slug/comments/',
+        jsonEncode({'content': text}),
+      );
 
-    final dateTimeStr =
-        "${now.day.toString().padLeft(2, '0')} ${monthNamesShort[now.month - 1]} ${now.year} "
-        "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
-
-    comments.add({
-      'author': widget.username,
-      'content': _commentController.text.trim(),
-      'time': dateTimeStr,
-    });
-
-    _commentController.clear();
-    setState(() {});
+      if (resp['id'] != null) {
+        _commentController.clear();
+        await _loadDetail();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal mengirim komentar: $e')),
+        );
+      }
+    }
   }
 
-  void _deleteComment(int index) {
-    comments.removeAt(index);
-    setState(() {});
+  Future<void> _deleteComment(int commentId) async {
+    if (!_isAdminStatus) return; // Gunakan getter baru
+
+    try {
+      final request = context.read<CookieRequest>();
+      final resp = await request.post(
+        '$_baseUrl/api/comments/$commentId/delete/',
+        {},
+      );
+
+      if (resp['ok'] == true) {
+        await _loadDetail();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Komentar berhasil dihapus')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error hapus komentar: $e')),
+        );
+      }
+    }
   }
 
   @override
@@ -69,98 +132,104 @@ class _PostDetailPageState extends State<PostDetailPage> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text(post!['title'] ?? 'Detail Post')),
-      body: Column(
-        children: [
-          Align(
-            alignment: Alignment.topLeft,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(post!['date'] ?? '', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                  const SizedBox(height: 8),
-                  Text(post!['title'] ?? '', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 12),
-                  Text(post!['content'] ?? '', style: const TextStyle(fontSize: 14)),
-                ],
-              ),
-            ),
-          ),
-          const Divider(thickness: 1),
-          const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text('Komentar', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            ),
-          ),
-          Expanded(
-            child: comments.isEmpty
-                ? const Center(child: Text('Belum ada komentar.'))
-                : ListView.builder(
-                    itemCount: comments.length,
-                    itemBuilder: (ctx, i) {
-                      final c = comments[i];
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ListTile(
-                            title: Row(
-                              children: [
-                                Text(c['author'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
-                                const SizedBox(width: 8),
-                                Text(c['time'] ?? '', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                              ],
-                            ),
-                            subtitle: Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Text(c['content'] ?? ''),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 16, bottom: 8),
-                            child: InkWell(
-                              onTap: () => _deleteComment(i),
-                              child: const Text('Delete', style: TextStyle(color: Colors.red, fontSize: 12)),
-                            ),
-                          ),
-                          const Divider(thickness: 1),
-                        ],
-                      );
-                    },
-                  ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: Column(
+      appBar: AppBar(
+        title: Text(post!['title'] ?? 'Detail Post'),
+      ),
+      body: _isLoading && comments.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
               children: [
-                TextField(
-                  controller: _commentController,
-                  maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: 'Tulis komentar...',
-                    border: OutlineInputBorder(),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(post!['date'] ?? '', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                              const SizedBox(height: 8),
+                              Text(post!['title'] ?? '', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 12),
+                              Text(post!['content'] ?? '', style: const TextStyle(fontSize: 16)),
+                            ],
+                          ),
+                        ),
+                        const Divider(thickness: 1),
+                        const Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Text('Komentar', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                        ),
+                        if (comments.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: Center(child: Text('Belum ada komentar.')),
+                          )
+                        else
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: comments.length,
+                            itemBuilder: (ctx, i) {
+                              final c = comments[i];
+                              final id = c['id'];
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  ListTile(
+                                    title: Row(
+                                      children: [
+                                        Text(c['author'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                        const SizedBox(width: 8),
+                                        Text(c['time'] ?? '', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                      ],
+                                    ),
+                                    subtitle: Text(c['content'] ?? ''),
+                                  ),
+                                  // GUNAKAN GETTER _isAdminStatus DI SINI
+                                  if (_isAdminStatus && id is int)
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 16, bottom: 8),
+                                      child: InkWell(
+                                        onTap: () => _deleteComment(id),
+                                        child: const Text(
+                                          'Delete',
+                                          style: TextStyle(color: Colors.red, fontSize: 13, fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    ),
+                                  const Divider(height: 1),
+                                ],
+                              );
+                            },
+                          ),
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: ElevatedButton(
-                    onPressed: _addComment,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF7A1E1E),
-                      foregroundColor: Colors.white,
-                    ),
-                    child: const Text('Send'),
+                // Input Komentar ... (sama seperti sebelumnya)
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  color: Colors.white,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _commentController,
+                          decoration: const InputDecoration(hintText: 'Tulis komentar...'),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: _addComment,
+                        icon: const Icon(Icons.send, color: Color(0xFF7A1E1E)),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-          ),
-        ],
-      ),
     );
   }
 }

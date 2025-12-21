@@ -4,12 +4,15 @@ import 'merch/merch_page.dart';
 import 'news/newspage.dart';
 import 'schedule/macth_list.dart';
 
-/// Placeholder right drawer navigation.
-/// Buttons are non-functional for now; wire navigation later.
 class RightDrawer extends StatelessWidget {
-  const RightDrawer({super.key, this.isAdmin = false});
+  const RightDrawer({
+    super.key,
+    this.isAdmin = false,
+    this.isSuperuser = false,
+  });
 
   final bool isAdmin;
+  final bool isSuperuser;
 
   @override
   Widget build(BuildContext context) {
@@ -44,27 +47,36 @@ class RightDrawer extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => NewsPage(isAdmin: isAdmin),
+              builder: (_) => NewsPage(isAdmin: isAdmin, isSuperuser: isSuperuser),
             ),
           );
         } else if (label == 'Merch') {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => MerchPage(isAdmin: isAdmin),
+              builder: (_) => MerchPage(isAdmin: isAdmin, isSuperuser: isSuperuser),
             ),
           );
         } else if (label == 'Schedule') {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => MatchListPage(isAdmin: isAdmin),
+              builder: (_) => MatchListPage(isAdmin: isAdmin, isSuperuser: isSuperuser),
             ),
           );
         } else if (isLogout) {
           Navigator.pushReplacementNamed(context, '/');
         } else if (label == 'Squad') {
           Navigator.pushNamed(context, '/Squad');
+        } else if (label == 'Ticket') {
+          Navigator.pushNamed(
+            context,
+            '/ticket',
+            arguments: {
+              'isAdmin': isAdmin,
+              'isSuperuser': isSuperuser,
+            },
+          );
         }
         else if (label == 'Forum') {
           Navigator.pushNamed(context, '/forum');
