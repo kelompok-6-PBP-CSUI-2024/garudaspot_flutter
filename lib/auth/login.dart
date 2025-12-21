@@ -199,12 +199,14 @@ class _LoginPageState extends State<LoginPage> {
                             final message = response['message'];
                             final uname = response['username'];
                             final isAdmin = response['is_admin'] == true;
+                            final isSuperuser = response['is_superuser'] == true;
                             if (context.mounted) {
                               Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => NewsPage(
                                     isAdmin: isAdmin,
+                                    isSuperuser: isSuperuser,
                                   ),
                                 ),
                                 

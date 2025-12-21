@@ -88,7 +88,7 @@ class MatchDetailPage extends StatelessWidget {
                     children: [
                       const Icon(Icons.location_on, size: 16, color: Colors.grey),
                       const SizedBox(width: 4),
-                      Text("${match.location}", style: const TextStyle(color: Colors.grey)),
+                      Text(match.location, style: const TextStyle(color: Colors.grey)),
                     ],
                   ),
                   const SizedBox(height: 4),

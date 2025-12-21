@@ -12,9 +12,12 @@ import '../right_drawer.dart';
 
 class MatchListPage extends StatefulWidget {
   // Menerima parameter isAdmin dari halaman sebelumnya
-  const MatchListPage({super.key, this.isAdmin = false});
+  const MatchListPage({super.key, this.isAdmin = false, this.isSuperuser = false});
 
   final bool isAdmin;
+  final bool isSuperuser;
+
+  bool get canManage => isAdmin || isSuperuser;
 
   @override
   State<MatchListPage> createState() => _MatchListPageState();
@@ -186,7 +189,7 @@ class _MatchListPageState extends State<MatchListPage> {
             ),
           ),
           
-          if (widget.isAdmin)
+          if (widget.canManage)
             IconButton(
               onPressed: () => _openFormDialog(), 
               icon: const Icon(Icons.add, color: Colors.black),
@@ -195,7 +198,10 @@ class _MatchListPageState extends State<MatchListPage> {
           const SizedBox(width: 4),
         ],
       ),
-      endDrawer: const RightDrawer(),
+      endDrawer: RightDrawer(
+        isAdmin: widget.isAdmin,
+        isSuperuser: widget.isSuperuser,
+      ),
       body: Column(
         children: [
           Container(
@@ -341,7 +347,7 @@ class _MatchListPageState extends State<MatchListPage> {
                                 ),
                               ),
                               
-                              if (widget.isAdmin)
+                              if (widget.canManage)
                                 Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
@@ -445,7 +451,7 @@ class _MatchListPageState extends State<MatchListPage> {
   }
 
   Future<void> _confirmDelete(Match item, CookieRequest request) async {
-    if (!widget.isAdmin) return;
+    if (!widget.canManage) return;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -630,7 +636,7 @@ class _MatchFormDialogState extends State<MatchFormDialog> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: _categories.contains(_category) ? _category : _categories[0],
+                initialValue: _categories.contains(_category) ? _category : _categories[0],
                 isExpanded: true,
                 items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c, overflow: TextOverflow.ellipsis))).toList(),
                 onChanged: (v) => setState(() => _category = v!),

@@ -573,41 +573,52 @@ class _TicketCard extends StatelessWidget {
     if (match.links.isEmpty) {
       return const Text('No links yet.', style: TextStyle(color: Color(0xFF6B7280)));
     }
+    final visible = match.links.take(2).toList();
+    final remaining = match.links.length - visible.length;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: match.links.map((link) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      link.vendor,
-                      style: const TextStyle(
-                        color: Color(0xFFB91C1C),
-                        fontWeight: FontWeight.w600,
+      children: [
+        ...visible.map((link) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        link.vendor,
+                        style: const TextStyle(
+                          color: Color(0xFFB91C1C),
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _formatPrice(link.price),
-                      style: const TextStyle(color: Color(0xFF4B5563)),
-                    ),
-                  ],
+                      const SizedBox(height: 2),
+                      Text(
+                        _formatPrice(link.price),
+                        style: const TextStyle(color: Color(0xFF4B5563)),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              if (onDeleteLink != null)
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.red),
-                  onPressed: () => onDeleteLink!.call(link),
-                ),
-            ],
+                if (onDeleteLink != null)
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                    onPressed: () => onDeleteLink!.call(link),
+                  ),
+              ],
+            ),
+          );
+        }),
+        if (remaining > 0)
+          TextButton(
+            onPressed: onView,
+            style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(0, 0)),
+            child: Text('Read more ($remaining more)', style: const TextStyle(color: Color(0xFFB91C1C))),
           ),
-        );
-      }).toList(),
+      ],
     );
   }
 

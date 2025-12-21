@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:garudaspot_flutter/tiket/models/ticket_link.dart';
 import 'package:garudaspot_flutter/tiket/models/ticket_match.dart';
 import 'package:http/http.dart' as http;
 import 'package:pbp_django_auth/pbp_django_auth.dart';
@@ -129,13 +128,15 @@ class TicketApiService {
     required TicketMatchPayload payload,
     bool asJson = false,
   }) async {
-    final headers = _authHeaders(request, asJson: asJson);
-    final res = await _client.post(
-      _uri('/tickets/create/'),
-      headers: headers,
-      body: asJson ? jsonEncode(payload.toJsonPayload()) : payload.toFormPayload(),
-    );
-    return res.statusCode == 200 || res.statusCode == 201;
+    try {
+      await request.post(
+        "$baseUrl/tickets/create/",
+        asJson ? payload.toJsonPayload() : payload.toFormPayload(),
+      );
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<bool> updateMatch({
@@ -144,24 +145,30 @@ class TicketApiService {
     required TicketMatchPayload payload,
     bool asJson = false,
   }) async {
-    final headers = _authHeaders(request, asJson: asJson);
-    final res = await _client.post(
-      _uri('/tickets/edit/$matchUuid/'),
-      headers: headers,
-      body: asJson ? jsonEncode(payload.toJsonPayload()) : payload.toFormPayload(),
-    );
-    return res.statusCode == 200;
+    try {
+      await request.post(
+        "$baseUrl/tickets/edit/$matchUuid/",
+        asJson ? payload.toJsonPayload() : payload.toFormPayload(),
+      );
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<bool> deleteMatch({
     required CookieRequest request,
     required String matchUuid,
   }) async {
-    final res = await _client.post(
-      _uri('/tickets/delete/$matchUuid/'),
-      headers: _authHeaders(request, asJson: false),
-    );
-    return res.statusCode == 302 || res.statusCode == 200;
+    try {
+      await request.post(
+        "$baseUrl/tickets/delete/$matchUuid/",
+        {},
+      );
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<bool> createLink({
@@ -170,32 +177,29 @@ class TicketApiService {
     required TicketLinkPayload payload,
     bool asJson = false,
   }) async {
-    final headers = _authHeaders(request, asJson: asJson);
-    final res = await _client.post(
-      _uri('/tickets/link/create/$matchUuid/'),
-      headers: headers,
-      body: asJson ? jsonEncode(payload.toJsonPayload()) : payload.toFormPayload(),
-    );
-    return res.statusCode == 200 || res.statusCode == 201;
+    try {
+      await request.post(
+        "$baseUrl/tickets/link/create/$matchUuid/",
+        asJson ? payload.toJsonPayload() : payload.toFormPayload(),
+      );
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<bool> deleteLink({
     required CookieRequest request,
     required String linkUuid,
   }) async {
-    final res = await _client.post(
-      _uri('/tickets/link/delete/$linkUuid/'),
-      headers: _authHeaders(request, asJson: false),
-    );
-    return res.statusCode == 302 || res.statusCode == 200;
-  }
-
-  Map<String, String> _authHeaders(CookieRequest request, {required bool asJson}) {
-    final cookieHeader = request.cookies.entries.map((e) => '${e.key}=${e.value}').join('; ');
-    return {
-      'Cookie': cookieHeader,
-      'Accept': 'application/json',
-      if (asJson) 'Content-Type': 'application/json',
-    };
+    try {
+      await request.post(
+        "$baseUrl/tickets/link/delete/$linkUuid/",
+        {},
+      );
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 }

@@ -6,6 +6,7 @@ import 'package:garudaspot_flutter/tiket/widgets/ticket_link_create.dart';
 import 'package:garudaspot_flutter/tiket/widgets/ticket_match_create.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class TicketDetailsPage extends StatefulWidget {
   const TicketDetailsPage({
@@ -28,6 +29,7 @@ class _TicketDetailsPageState extends State<TicketDetailsPage> {
   TicketMatch? _match;
   bool _loading = true;
   String? _error;
+  bool _openingLink = false;
 
   @override
   void initState() {
@@ -186,52 +188,55 @@ class _TicketDetailsPageState extends State<TicketDetailsPage> {
           ),
           itemBuilder: (context, index) {
             final link = links[index];
-            return Container(
-              padding: const EdgeInsets.all(10),
-              decoration: _cardDecoration(),
-              child: Row(
-                children: [
-                  if (link.imgVendor.isNotEmpty)
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        link.imgVendor,
-                        width: 36,
-                        height: 36,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Icon(Icons.store, color: Color(0xFFB91C1C)),
+            return InkWell(
+              onTap: () => _openVendorLink(link.vendorLink),
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: _cardDecoration(),
+                child: Row(
+                  children: [
+                    if (link.imgVendor.isNotEmpty)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          link.imgVendor,
+                          width: 36,
+                          height: 36,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const Icon(Icons.store, color: Color(0xFFB91C1C)),
+                        ),
+                      ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            link.vendor,
+                            style: const TextStyle(
+                              color: Color(0xFFB91C1C),
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            _formatPrice(link.price),
+                            style: const TextStyle(color: Color(0xFF4B5563), fontSize: 12.5),
+                          ),
+                        ],
                       ),
                     ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          link.vendor,
-                          style: const TextStyle(
-                            color: Color(0xFFB91C1C),
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          _formatPrice(link.price),
-                          style: const TextStyle(color: Color(0xFF4B5563), fontSize: 12.5),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (widget.canManage)
-                    IconButton(
-                      onPressed: () => _confirmDeleteLink(request, link),
-                      icon: const Icon(Icons.delete_outline, color: Colors.red),
-                    ),
-                ],
+                    if (widget.canManage)
+                      IconButton(
+                        onPressed: () => _confirmDeleteLink(request, link),
+                        icon: const Icon(Icons.delete_outline, color: Colors.red),
+                      ),
+                  ],
+                ),
               ),
             );
           },
@@ -275,6 +280,52 @@ class _TicketDetailsPageState extends State<TicketDetailsPage> {
       backgroundColor: const Color(0xFFE5E7EB),
       onBackgroundImageError: (_, __) {},
     );
+  }
+
+  Future<void> _openVendorLink(String rawUrl) async {
+    if (_openingLink) return;
+    final trimmed = rawUrl.trim();
+    if (trimmed.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No link available')),
+        );
+      }
+      return;
+    }
+
+    final withScheme = trimmed.startsWith('http') ? trimmed : 'https://$trimmed';
+    final uri = Uri.tryParse(withScheme);
+    if (uri == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invalid link')),
+        );
+      }
+      return;
+    }
+
+    setState(() => _openingLink = true);
+    try {
+      final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!ok && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open link')),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open link')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _openingLink = false);
+      } else {
+        _openingLink = false;
+      }
+    }
   }
 
   Future<void> _openAddLink(CookieRequest request) async {
