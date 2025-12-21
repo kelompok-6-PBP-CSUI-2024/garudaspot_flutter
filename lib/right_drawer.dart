@@ -78,6 +78,9 @@ class RightDrawer extends StatelessWidget {
             },
           );
         }
+        else if (label == 'Forum') {
+          Navigator.pushNamed(context, '/forum');
+        }
       },
     );
   }
