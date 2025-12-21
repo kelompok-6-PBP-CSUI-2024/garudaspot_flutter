@@ -31,7 +31,7 @@ class ForumPage extends StatefulWidget {
 }
 
 class _ForumPageState extends State<ForumPage> {
-  static const String _baseUrl = 'http://localhost:8000/forum';
+  static const String _baseUrl = 'https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/forum';
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 

@@ -3,7 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'model/merch.dart';
 
-const String _proxyBase = 'http://localhost:8000/proxy-image/?url=';
+const String _proxyBase = 'https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/proxy-image/?url=';
 
 class MerchDetailPage extends StatelessWidget {
   const MerchDetailPage({

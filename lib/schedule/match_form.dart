@@ -344,8 +344,8 @@ class _MatchFormPageState extends State<MatchFormPage> {
                       };
 
                       final url = isEdit
-                          ? "http://localhost:8000/schedule/api/match/edit/${widget.match!.id}/"
-                          : "http://localhost:8000/schedule/api/match/add/";
+                          ? "https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/schedule/api/match/edit/${widget.match!.id}/"
+                          : "https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/schedule/api/match/add/";
 
                       final response = await request.postJson(
                         url,

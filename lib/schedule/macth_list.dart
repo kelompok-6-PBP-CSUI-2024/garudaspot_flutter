@@ -25,7 +25,7 @@ class MatchListPage extends StatefulWidget {
 
 class _MatchListPageState extends State<MatchListPage> {
   // Sesuaikan URL: localhost untuk Web/iOS, 10.0.2.2 untuk Android Emulator
-  static const String _baseUrl = 'http://localhost:8000/schedule/api/match/';
+  static const String _baseUrl = 'https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/schedule/api/match/';
   
   final List<Match> _matches = [];
   final List<String> _categories = const [
@@ -472,7 +472,7 @@ class _MatchListPageState extends State<MatchListPage> {
   Future<void> _deleteMatch(Match item, CookieRequest request) async {
     try {
       final res = await request.post(
-        "http://localhost:8000/schedule/api/match/delete/${item.id}/",
+        "https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/schedule/api/match/delete/${item.id}/",
         {},
       );
       final ok = res is Map<String, dynamic>; 
@@ -702,8 +702,8 @@ class _MatchFormDialogState extends State<MatchFormDialog> {
               };
 
               final url = isEdit
-                  ? "http://localhost:8000/schedule/api/match/edit/${widget.match!.id}/"
-                  : "http://localhost:8000/schedule/api/match/add/";
+                  ? "https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/schedule/api/match/edit/${widget.match!.id}/"
+                  : "https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/schedule/api/match/add/";
 
               try {
                 final response = await request.post(url, payload);

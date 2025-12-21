@@ -24,7 +24,7 @@ class NewsPage extends StatefulWidget {
 }
 
 class _NewsPageState extends State<NewsPage> {
-  static const String _baseUrl = 'http://localhost:8000/json/';
+  static const String _baseUrl = 'https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/json/';
   final List<News> _news = [];
 
   final List<String> _months = const [
@@ -488,7 +488,7 @@ class _NewsPageState extends State<NewsPage> {
     if (!(widget.isAdmin)) return;
     try {
       final res = await request.post(
-        "http://localhost:8000/api/news/add/",
+        "https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/api/news/add/",
         {
           "title": title,
           "category": category,
@@ -540,7 +540,7 @@ class _NewsPageState extends State<NewsPage> {
   Future<void> _deleteNews(News item, CookieRequest request) async {
     try {
       final res = await request.post(
-        "http://localhost:8000/api/news/delete/${item.id}/",
+        "https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/api/news/delete/${item.id}/",
         {},
       );
       final ok = res is Map<String, dynamic> && res['deleted'] != null;

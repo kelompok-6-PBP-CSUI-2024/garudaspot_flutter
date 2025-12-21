@@ -4,7 +4,7 @@ import 'package:pbp_django_auth/pbp_django_auth.dart';
 import '../models/player.dart';
 
 class ApiService {
-  static const String baseUrl = "http://localhost:8000";
+  static const String baseUrl = "https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id";
 
   static Future<List<Player>> fetchPlayers() async {
     final url = Uri.parse("$baseUrl/squad/api/players/");

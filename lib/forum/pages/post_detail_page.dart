@@ -20,7 +20,7 @@ class PostDetailPage extends StatefulWidget {
 }
 
 class _PostDetailPageState extends State<PostDetailPage> {
-  static const String _baseUrl = 'http://localhost:8000/forum';
+  static const String _baseUrl = 'https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/forum';
 
   Map<String, dynamic>? post;
   List<Map<String, dynamic>> comments = [];

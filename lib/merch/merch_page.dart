@@ -11,7 +11,7 @@ import 'merch_header.dart';
 import 'merch_detail_page.dart';
 import 'model/merch.dart';
 
-const String _proxyBase = 'http://localhost:8000/proxy-image/?url=';
+const String _proxyBase = 'https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/proxy-image/?url=';
 
 class MerchPage extends StatefulWidget {
   const MerchPage({super.key, this.isAdmin = false, this.isSuperuser = false});
@@ -24,7 +24,7 @@ class MerchPage extends StatefulWidget {
 }
 
 class _MerchPageState extends State<MerchPage> {
-  static const String _apiUrl = 'http://localhost:8000/merch/json/';
+  static const String _apiUrl = 'https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/merch/json/';
   late Future<List<Merch>> _futureMerch;
   String _selectedFilter = 'All';
   String _selectedSort = 'recent';
@@ -611,7 +611,7 @@ class _MerchPageState extends State<MerchPage> {
     if (!_canManage) return;
     try {
       await request.post(
-        "http://localhost:8000/merch/api/create/",
+        "https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/merch/api/create/",
         {
           "name": name,
           "vendor": vendor,
@@ -657,7 +657,7 @@ class _MerchPageState extends State<MerchPage> {
     if (!_canManage) return;
     try {
       await request.post(
-        "http://localhost:8000/merch/api/update/$merchId/",
+        "https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/merch/api/update/$merchId/",
         {
           "name": name,
           "vendor": vendor,
@@ -723,7 +723,7 @@ class _MerchPageState extends State<MerchPage> {
     if (!_canManage) return;
     try {
       await request.post(
-        "http://localhost:8000/merch/api/delete/$merchId/",
+        "https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/merch/api/delete/$merchId/",
         {},
       );
       if (mounted) {
