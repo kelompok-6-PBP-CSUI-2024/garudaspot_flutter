@@ -11,7 +11,7 @@ import 'merch_header.dart';
 import 'merch_detail_page.dart';
 import 'model/merch.dart';
 
-const String _proxyBase = 'http://localhost:8000/proxy-image/?url=';
+const String _proxyBase = 'https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/proxy-image/?url=';
 
 class MerchPage extends StatefulWidget {
   const MerchPage({super.key, this.isAdmin = false, this.isSuperuser = false});
@@ -24,7 +24,7 @@ class MerchPage extends StatefulWidget {
 }
 
 class _MerchPageState extends State<MerchPage> {
-  static const String _apiUrl = 'http://localhost:8000/merch/json/';
+  static const String _apiUrl = 'https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/merch/json/';
   late Future<List<Merch>> _futureMerch;
   String _selectedFilter = 'All';
   String _selectedSort = 'recent';
@@ -107,6 +107,12 @@ class _MerchPageState extends State<MerchPage> {
           ],
         ),
         actions: [
+          if (_canManage)
+            IconButton(
+              onPressed: () => _openAddDialog(request),
+              icon: const Icon(Icons.add, color: Colors.black),
+              tooltip: 'Add Merch',
+            ),
           Builder(
             builder: (ctx) => IconButton(
               onPressed: () {
@@ -116,12 +122,6 @@ class _MerchPageState extends State<MerchPage> {
               tooltip: 'Menu',
             ),
           ),
-          if (_canManage)
-            IconButton(
-              onPressed: () => _openAddDialog(request),
-              icon: const Icon(Icons.add, color: Colors.black),
-              tooltip: 'Add Merch',
-            ),
           const SizedBox(width: 4),
         ],
       ),
@@ -241,23 +241,29 @@ class _MerchPageState extends State<MerchPage> {
                               borderRadius: BorderRadius.zero,
                             ),
                         child: InkWell(
-                              onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => MerchDetailPage(
-                                    merch: merch,
-                                    isAdmin: _canManage,
-                                    onEdit: () => _openEditDialog(
-                                      request: request,
+                              onTap: () {
+                                if (!request.loggedIn) {
+                                  Navigator.pushReplacementNamed(context, '/');
+                                  return;
+                                }
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => MerchDetailPage(
                                       merch: merch,
-                                    ),
-                                    onDelete: () => _confirmDelete(
-                                      request: request,
-                                      merch: merch,
+                                      isAdmin: _canManage,
+                                      onEdit: () => _openEditDialog(
+                                        request: request,
+                                        merch: merch,
+                                      ),
+                                      onDelete: () => _confirmDelete(
+                                        request: request,
+                                        merch: merch,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ),
+                                );
+                              },
                               child: Container(
                                 child: Padding(
                                   padding: const EdgeInsets.all(12),
@@ -611,7 +617,7 @@ class _MerchPageState extends State<MerchPage> {
     if (!_canManage) return;
     try {
       await request.post(
-        "http://localhost:8000/merch/api/create/",
+        "https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/merch/api/create/",
         {
           "name": name,
           "vendor": vendor,
@@ -621,6 +627,7 @@ class _MerchPageState extends State<MerchPage> {
           "category": category,
           "link": link,
           "description": description,
+          "is_admin": _canManage ? "true" : "false",
         },
       );
       if (mounted) {
@@ -657,7 +664,7 @@ class _MerchPageState extends State<MerchPage> {
     if (!_canManage) return;
     try {
       await request.post(
-        "http://localhost:8000/merch/api/update/$merchId/",
+        "https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/merch/api/update/$merchId/",
         {
           "name": name,
           "vendor": vendor,
@@ -667,6 +674,7 @@ class _MerchPageState extends State<MerchPage> {
           "category": category,
           "link": link,
           "description": description,
+          "is_admin": _canManage ? "true" : "false",
         },
       );
       if (mounted) {
@@ -723,8 +731,10 @@ class _MerchPageState extends State<MerchPage> {
     if (!_canManage) return;
     try {
       await request.post(
-        "http://localhost:8000/merch/api/delete/$merchId/",
-        {},
+        "https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/merch/api/delete/$merchId/",
+        {
+          "is_admin": _canManage ? "true" : "false",
+        },
       );
       if (mounted) {
         setState(() {

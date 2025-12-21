@@ -222,7 +222,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                           final response = await request.postJson(
                             // Use localhost for Flutter web (Chrome). For Android emulator, use http://10.0.2.2:8000
-                            "http://localhost:8000/accounts/register-mobile/",
+                            "https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/accounts/register-mobile/",
                             jsonEncode({
                               "username": username,
                               "password1": password1,

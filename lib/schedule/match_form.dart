@@ -169,6 +169,8 @@ class _MatchFormPageState extends State<MatchFormPage> {
   @override
   Widget build(BuildContext context) {
     final request = context.watch<CookieRequest>();
+    final canManage =
+        request.jsonData['is_admin'] == true || request.jsonData['is_superuser'] == true;
     final isEdit = widget.match != null;
     final pageTitle = isEdit ? "Edit Match" : "Add New Match";
 
@@ -319,6 +321,7 @@ class _MatchFormPageState extends State<MatchFormPage> {
                         'location': _locationController.text,
                         'match_date': _dateController.text,
                         'category': _category,
+                        'is_admin': canManage ? 'true' : 'false',
                         'home_score': parseInt(_homeScoreController.text),
                         'away_score': parseInt(_awayScoreController.text),
                         
@@ -344,8 +347,8 @@ class _MatchFormPageState extends State<MatchFormPage> {
                       };
 
                       final url = isEdit
-                          ? "http://localhost:8000/schedule/api/match/edit/${widget.match!.id}/"
-                          : "http://localhost:8000/schedule/api/match/add/";
+                          ? "https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/schedule/api/match/edit/${widget.match!.id}/"
+                          : "https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/schedule/api/match/add/";
 
                       final response = await request.postJson(
                         url,

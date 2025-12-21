@@ -4,7 +4,7 @@ import 'package:pbp_django_auth/pbp_django_auth.dart';
 import '../models/player.dart';
 
 class ApiService {
-  static const String baseUrl = "http://localhost:8000";
+  static const String baseUrl = "https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id";
 
   static Future<List<Player>> fetchPlayers() async {
     final url = Uri.parse("$baseUrl/squad/api/players/");
@@ -35,10 +35,15 @@ class ApiService {
 static Future<Player> createPlayer({
   required CookieRequest request,
   required Map<String, String> data,
+  bool isAdmin = false,
 }) async {
+  final payload = {
+    ...data,
+    "is_admin": isAdmin ? "true" : "false",
+  };
   final res = await request.postJson(
     "$baseUrl/squad/api/players/create/",
-    jsonEncode(data),
+    jsonEncode(payload),
   );
 
   return Player.fromJson(res);
@@ -50,10 +55,15 @@ static Future<Player> updatePlayer({
   required CookieRequest request,
   required int playerId,
   required Map<String, String> data,
+  bool isAdmin = false,
 }) async {
+  final payload = {
+    ...data,
+    "is_admin": isAdmin ? "true" : "false",
+  };
   final res = await request.postJson(
     "$baseUrl/squad/api/players/$playerId/edit/",
-    jsonEncode(data),
+    jsonEncode(payload),
   );
 
   return Player.fromJson(res);
@@ -64,10 +74,13 @@ static Future<Player> updatePlayer({
 static Future<void> deletePlayer({
   required CookieRequest request,
   required int playerId,
+  bool isAdmin = false,
 }) async {
   await request.postJson(
     "$baseUrl/squad/api/players/$playerId/delete/",
-    jsonEncode({}),
+    jsonEncode({
+      "is_admin": isAdmin ? "true" : "false",
+    }),
   );
 }
 static Future<void> initCsrf(CookieRequest request) async {

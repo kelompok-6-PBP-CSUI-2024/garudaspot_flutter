@@ -94,6 +94,11 @@ class _SquadPageState extends State<SquadPage> {
             player: p,
             isAdmin: isAdmin,
             onTap: () {
+              final request = context.read<CookieRequest>();
+              if (!request.loggedIn) {
+                Navigator.pushReplacementNamed(context, '/');
+                return;
+              }
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -113,8 +118,7 @@ class _SquadPageState extends State<SquadPage> {
 
 void _openForm(BuildContext context) async {
   final request = context.read<CookieRequest>();
-
-  await ApiService.initCsrf(request);
+  final isAdmin = request.jsonData['is_admin'] == true || request.jsonData['is_superuser'] == true;
 
   showDialog(
     context: context,
@@ -124,6 +128,7 @@ void _openForm(BuildContext context) async {
         final created = await ApiService.createPlayer(
           request: request,
           data: data,
+          isAdmin: isAdmin,
         );
 
         setState(() {
@@ -138,17 +143,18 @@ void _openForm(BuildContext context) async {
 
 void _editPlayer(Player p) {
   final request = context.read<CookieRequest>();
+  final isAdmin = request.jsonData['is_admin'] == true || request.jsonData['is_superuser'] == true;
 
   showDialog(
     context: context,
     builder: (_) => PlayerFormDialog(
       player: p,
       onSubmit: (data) async {
-        await ApiService.initCsrf(request);
         final updated = await ApiService.updatePlayer(
           request: request,
           playerId: p.id,
           data: data,
+          isAdmin: isAdmin,
         );
 
         setState(() {
@@ -162,6 +168,8 @@ void _editPlayer(Player p) {
 
 
   Future<void> _deletePlayer(Player p) async {
+    final request = context.read<CookieRequest>();
+    final isAdmin = request.jsonData['is_admin'] == true || request.jsonData['is_superuser'] == true;
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
@@ -185,8 +193,9 @@ void _editPlayer(Player p) {
 
     if (ok == true) {
       await ApiService.deletePlayer(
-        request: context.read<CookieRequest>(),
+        request: request,
         playerId: p.id,
+        isAdmin: isAdmin,
       );
       setState(() => _players.removeWhere((x) => x.id == p.id));
     }

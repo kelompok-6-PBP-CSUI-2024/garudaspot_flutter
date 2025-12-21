@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         ),
-        initialRoute: '/',
+        initialRoute: '/news',
         routes: {
           '/': (_) => const LoginPage(),
           '/register': (_) => const RegisterPage(),
@@ -40,6 +40,10 @@ class MyApp extends StatelessWidget {
         onGenerateRoute: (settings) {
           // Route: forum
           if (settings.name == '/forum') {
+            final request = Provider.of<CookieRequest>(context, listen: false);
+            if (!request.loggedIn) {
+              return MaterialPageRoute(builder: (_) => const LoginPage());
+            }
             final args = settings.arguments as Map<String, dynamic>?;
 
             final username = (args?['username'] ?? '') as String;

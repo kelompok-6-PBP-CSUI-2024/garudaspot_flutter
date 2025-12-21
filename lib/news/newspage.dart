@@ -24,7 +24,7 @@ class NewsPage extends StatefulWidget {
 }
 
 class _NewsPageState extends State<NewsPage> {
-  static const String _baseUrl = 'http://localhost:8000/json/';
+  static const String _baseUrl = 'https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/json/';
   final List<News> _news = [];
 
   final List<String> _months = const [
@@ -162,6 +162,21 @@ class _NewsPageState extends State<NewsPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         titleSpacing: 12,
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+          onPressed: () {
+            final nav = Navigator.of(context);
+            if (nav.canPop()) {
+              nav.pop();
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Tidak ada halaman untuk kembali.')),
+              );
+            }
+          },
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          tooltip: 'Back',
+        ),
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -181,6 +196,12 @@ class _NewsPageState extends State<NewsPage> {
           ],
         ),
         actions: [
+          if (widget.isAdmin)
+            IconButton(
+              onPressed: () => _openAddDialog(request),
+              icon: const Icon(Icons.add, color: Colors.black),
+              tooltip: 'Add News',
+            ),
           Builder(
             builder: (ctx) => IconButton(
               onPressed: () {
@@ -190,12 +211,6 @@ class _NewsPageState extends State<NewsPage> {
               tooltip: 'Menu',
             ),
           ),
-          if (widget.isAdmin)
-            IconButton(
-              onPressed: () => _openAddDialog(request),
-              icon: const Icon(Icons.add, color: Colors.black),
-              tooltip: 'Add News',
-            ),
           const SizedBox(width: 4),
         ],
       ),
@@ -297,11 +312,11 @@ class _NewsPageState extends State<NewsPage> {
       return const Center(child: Text('Belum ada berita.'));
     }
 
-    return RefreshIndicator(
-      onRefresh: _refresh,
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-        physics: const AlwaysScrollableScrollPhysics(),
+          return RefreshIndicator(
+            onRefresh: _refresh,
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+              physics: const AlwaysScrollableScrollPhysics(),
         itemBuilder: (context, index) {
           final item = _news[index];
           final snippet = item.content.length > 200
@@ -310,12 +325,16 @@ class _NewsPageState extends State<NewsPage> {
           return Card(
             elevation: 1,
             margin: EdgeInsets.zero,
-            child: InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => NewsDetailPage(
+                child: InkWell(
+                  onTap: () {
+                    if (!request.loggedIn) {
+                      Navigator.pushReplacementNamed(context, '/');
+                      return;
+                    }
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => NewsDetailPage(
                       news: item,
                     ),
                   ),
@@ -488,7 +507,7 @@ class _NewsPageState extends State<NewsPage> {
     if (!(widget.isAdmin)) return;
     try {
       final res = await request.post(
-        "http://localhost:8000/api/news/add/",
+        "https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/api/news/add/",
         {
           "title": title,
           "category": category,
@@ -540,8 +559,10 @@ class _NewsPageState extends State<NewsPage> {
   Future<void> _deleteNews(News item, CookieRequest request) async {
     try {
       final res = await request.post(
-        "http://localhost:8000/api/news/delete/${item.id}/",
-        {},
+        "https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/api/news/delete/${item.id}/",
+        {
+          "is_admin": widget.isAdmin ? "true" : "false",
+        },
       );
       final ok = res is Map<String, dynamic> && res['deleted'] != null;
       if (!ok) {

@@ -86,7 +86,7 @@ class TicketApiService {
     this.baseUrl = _defaultBaseUrl,
   }) : _client = client ?? http.Client();
 
-  static const String _defaultBaseUrl = 'http://localhost:8000';
+  static const String _defaultBaseUrl = 'https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id';
 
   final http.Client _client;
   final String baseUrl;
@@ -126,12 +126,16 @@ class TicketApiService {
   Future<bool> createMatch({
     required CookieRequest request,
     required TicketMatchPayload payload,
+    bool isAdmin = false,
     bool asJson = false,
   }) async {
     try {
       await request.post(
         "$baseUrl/tickets/create/",
-        asJson ? payload.toJsonPayload() : payload.toFormPayload(),
+        {
+          ...asJson ? payload.toJsonPayload() : payload.toFormPayload(),
+          "is_admin": isAdmin ? "true" : "false",
+        },
       );
       return true;
     } catch (_) {
@@ -143,12 +147,16 @@ class TicketApiService {
     required CookieRequest request,
     required String matchUuid,
     required TicketMatchPayload payload,
+    bool isAdmin = false,
     bool asJson = false,
   }) async {
     try {
       await request.post(
         "$baseUrl/tickets/edit/$matchUuid/",
-        asJson ? payload.toJsonPayload() : payload.toFormPayload(),
+        {
+          ...asJson ? payload.toJsonPayload() : payload.toFormPayload(),
+          "is_admin": isAdmin ? "true" : "false",
+        },
       );
       return true;
     } catch (_) {
@@ -159,11 +167,14 @@ class TicketApiService {
   Future<bool> deleteMatch({
     required CookieRequest request,
     required String matchUuid,
+    bool isAdmin = false,
   }) async {
     try {
       await request.post(
         "$baseUrl/tickets/delete/$matchUuid/",
-        {},
+        {
+          "is_admin": isAdmin ? "true" : "false",
+        },
       );
       return true;
     } catch (_) {
@@ -175,12 +186,16 @@ class TicketApiService {
     required CookieRequest request,
     required String matchUuid,
     required TicketLinkPayload payload,
+    bool isAdmin = false,
     bool asJson = false,
   }) async {
     try {
       await request.post(
         "$baseUrl/tickets/link/create/$matchUuid/",
-        asJson ? payload.toJsonPayload() : payload.toFormPayload(),
+        {
+          ...asJson ? payload.toJsonPayload() : payload.toFormPayload(),
+          "is_admin": isAdmin ? "true" : "false",
+        },
       );
       return true;
     } catch (_) {
@@ -191,11 +206,14 @@ class TicketApiService {
   Future<bool> deleteLink({
     required CookieRequest request,
     required String linkUuid,
+    bool isAdmin = false,
   }) async {
     try {
       await request.post(
         "$baseUrl/tickets/link/delete/$linkUuid/",
-        {},
+        {
+          "is_admin": isAdmin ? "true" : "false",
+        },
       );
       return true;
     } catch (_) {

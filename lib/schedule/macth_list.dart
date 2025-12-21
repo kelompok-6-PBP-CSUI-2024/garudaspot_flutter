@@ -25,7 +25,7 @@ class MatchListPage extends StatefulWidget {
 
 class _MatchListPageState extends State<MatchListPage> {
   // Sesuaikan URL: localhost untuk Web/iOS, 10.0.2.2 untuk Android Emulator
-  static const String _baseUrl = 'http://localhost:8000/schedule/api/match/';
+  static const String _baseUrl = 'https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/schedule/api/match/';
   
   final List<Match> _matches = [];
   final List<String> _categories = const [
@@ -143,7 +143,10 @@ class _MatchListPageState extends State<MatchListPage> {
   void _openFormDialog({Match? match}) async {
     await showDialog(
       context: context,
-      builder: (context) => MatchFormDialog(match: match),
+      builder: (context) => MatchFormDialog(
+        match: match,
+        canManage: widget.canManage,
+      ),
     );
     _loadMatches(reset: true);
   }
@@ -179,6 +182,12 @@ class _MatchListPageState extends State<MatchListPage> {
           ],
         ),
         actions: [
+          if (widget.canManage)
+            IconButton(
+              onPressed: () => _openFormDialog(), 
+              icon: const Icon(Icons.add, color: Colors.black),
+              tooltip: 'Add Match',
+            ),
           Builder(
             builder: (ctx) => IconButton(
               onPressed: () {
@@ -188,13 +197,6 @@ class _MatchListPageState extends State<MatchListPage> {
               tooltip: 'Menu',
             ),
           ),
-          
-          if (widget.canManage)
-            IconButton(
-              onPressed: () => _openFormDialog(), 
-              icon: const Icon(Icons.add, color: Colors.black),
-              tooltip: 'Add Match',
-            ),
           const SizedBox(width: 4),
         ],
       ),
@@ -307,6 +309,10 @@ class _MatchListPageState extends State<MatchListPage> {
             ),
             child: InkWell(
               onTap: () {
+                if (!request.loggedIn) {
+                  Navigator.pushReplacementNamed(context, '/');
+                  return;
+                }
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => MatchDetailPage(match: item)),
@@ -471,9 +477,11 @@ class _MatchListPageState extends State<MatchListPage> {
 
   Future<void> _deleteMatch(Match item, CookieRequest request) async {
     try {
-      final res = await request.post(
-        "http://localhost:8000/schedule/api/match/delete/${item.id}/",
-        {},
+      final res = await request.postJson(
+        "https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/schedule/api/match/delete/${item.id}/",
+        jsonEncode({
+          "is_admin": widget.canManage,
+        }),
       );
       final ok = res is Map<String, dynamic>; 
       if (!ok) throw Exception('Unexpected response');
@@ -500,7 +508,9 @@ class _MatchResponse {
 
 class MatchFormDialog extends StatefulWidget {
   final Match? match;
-  const MatchFormDialog({super.key, this.match});
+  const MatchFormDialog({super.key, this.match, required this.canManage});
+
+  final bool canManage;
 
   @override
   State<MatchFormDialog> createState() => _MatchFormDialogState();
@@ -670,6 +680,7 @@ class _MatchFormDialogState extends State<MatchFormDialog> {
                 'location': _locationController.text,
                 'match_date': _dateController.text,
                 'category': _category,
+                'is_admin': widget.canManage ? 'true' : 'false',
                 
                 // Tambahkan .toString() agar dikirim sebagai String!
                 'home_score': pInt(_homeScoreController.text).toString(),
@@ -702,8 +713,8 @@ class _MatchFormDialogState extends State<MatchFormDialog> {
               };
 
               final url = isEdit
-                  ? "http://localhost:8000/schedule/api/match/edit/${widget.match!.id}/"
-                  : "http://localhost:8000/schedule/api/match/add/";
+                  ? "https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/schedule/api/match/edit/${widget.match!.id}/"
+                  : "https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/schedule/api/match/add/";
 
               try {
                 final response = await request.post(url, payload);
