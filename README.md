@@ -109,3 +109,6 @@ Semua modul berjalan di atas pola integrasi yang sama.
 - Schedule (`lib/schedule/`): daftar jadwal dengan filter/sort; admin dapat add/edit/delete.
 - Merch (`lib/merch/`): katalog dengan filter/sort; admin CRUD.
 - News (`lib/news/`) & Squad (`lib/Squad/`): list/detail/CRUD sesuai peran admin.
+
+## 10. Bitrise
+Link : https://app.bitrise.io/app/0ceec09a-a6e7-4753-a041-f623f6ddc255/installable-artifacts/5bb65871b45a2a15/public-install-page/6eacc771acf7a2a64bed28f04fbb9a6a
