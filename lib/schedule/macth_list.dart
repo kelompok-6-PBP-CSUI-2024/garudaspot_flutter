@@ -228,7 +228,10 @@ class _MatchListPageState extends State<MatchListPage> {
   }
 
   Widget _buildFilters() {
-    TextStyle labelStyle = const TextStyle(fontWeight: FontWeight.w600);
+    TextStyle labelStyle = const TextStyle(
+      fontWeight: FontWeight.w600,
+      color: Colors.black,
+    );
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
       child: Row(
@@ -243,7 +246,15 @@ class _MatchListPageState extends State<MatchListPage> {
                   value: _categories.contains(_selectedCategory) ? _selectedCategory : _categories.first,
                   isExpanded: true,
                   style: labelStyle,
-                  items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                  items: _categories
+                      .map(
+                        (c) => DropdownMenuItem(
+                          value: c,
+                          child: Text(c, style: labelStyle),
+                        ),
+                      )
+                      .toList(),
+                  dropdownColor: Colors.white,
                   onChanged: (value) {
                     if (value == null) return;
                     setState(() => _selectedCategory = value);
@@ -265,9 +276,28 @@ class _MatchListPageState extends State<MatchListPage> {
                   isExpanded: true,
                   style: labelStyle,
                   items: const [
-                    DropdownMenuItem(value: 'Terbaru', child: Text('Urutkan: Terbaru')),
-                    DropdownMenuItem(value: 'Terlama', child: Text('Urutkan: Terlama')),
+                    DropdownMenuItem(
+                      value: 'Terbaru',
+                      child: Text(
+                        'Urutkan: Terbaru',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: 'Terlama',
+                      child: Text(
+                        'Urutkan: Terlama',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
                   ],
+                  dropdownColor: Colors.white,
                   onChanged: (value) {
                     if (value == null) return;
                     setState(() => _selectedSort = value);

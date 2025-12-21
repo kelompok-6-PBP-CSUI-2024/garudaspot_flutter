@@ -166,15 +166,25 @@ class _MerchPageState extends State<MerchPage> {
                           child: DropdownButton<String>(
                             value: _selectedFilter,
                             isExpanded: true,
-                            style: const TextStyle(fontWeight: FontWeight.w600),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
+                            ),
                             items: _filterOptions.entries
                                 .map(
                                   (entry) => DropdownMenuItem(
                                     value: entry.key,
-                                    child: Text(entry.value),
+                                    child: Text(
+                                      entry.value,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black,
+                                      ),
+                                    ),
                                   ),
                                 )
                                 .toList(),
+                            dropdownColor: Colors.white,
                             onChanged: (value) {
                               if (value == null) return;
                               setState(() => _selectedFilter = value);
@@ -198,15 +208,25 @@ class _MerchPageState extends State<MerchPage> {
                           child: DropdownButton<String>(
                             value: _selectedSort,
                             isExpanded: true,
-                            style: const TextStyle(fontWeight: FontWeight.w600),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
+                            ),
                             items: _sortOptions.entries
                                 .map(
                                   (entry) => DropdownMenuItem(
                                     value: entry.key,
-                                    child: Text(entry.value),
+                                    child: Text(
+                                      entry.value,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black,
+                                      ),
+                                    ),
                                   ),
                                 )
                                 .toList(),
+                            dropdownColor: Colors.white,
                             onChanged: (value) {
                               if (value == null) return;
                               setState(() => _selectedSort = value);
