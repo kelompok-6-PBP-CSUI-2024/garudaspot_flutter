@@ -43,7 +43,7 @@ class RightDrawer extends StatelessWidget {
     return ListTile(
       leading: Icon(icon),
       title: Text(label),
-      onTap: () {
+      onTap: () async {
         Navigator.of(context).pop();
         if (label == 'News') {
           Navigator.push(
@@ -67,7 +67,13 @@ class RightDrawer extends StatelessWidget {
             ),
           );
         } else if (isLogout) {
-          Navigator.pushReplacementNamed(context, '/');
+          final request = context.read<CookieRequest>();
+          try {
+            await request.logout(
+              "https://hasanul-muttaqin-garudaspot.pbp.cs.ui.ac.id/accounts/logout-mobile/",
+            );
+          } catch (_) {}
+          Navigator.pushReplacementNamed(context, '/news');
         } else if (label == 'Squad') {
           Navigator.pushNamed(context, '/Squad');
         } else if (label == 'Ticket') {

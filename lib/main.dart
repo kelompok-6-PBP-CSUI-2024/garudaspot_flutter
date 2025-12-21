@@ -40,10 +40,6 @@ class MyApp extends StatelessWidget {
         onGenerateRoute: (settings) {
           // Route: forum
           if (settings.name == '/forum') {
-            final request = Provider.of<CookieRequest>(context, listen: false);
-            if (!request.loggedIn) {
-              return MaterialPageRoute(builder: (_) => const LoginPage());
-            }
             final args = settings.arguments as Map<String, dynamic>?;
 
             final username = (args?['username'] ?? '') as String;
