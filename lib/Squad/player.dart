@@ -41,6 +41,7 @@ class _SquadPageState extends State<SquadPage> {
   Widget build(BuildContext context) {
     final request = context.watch<CookieRequest>();
     final bool isAdmin = request.jsonData['is_admin'] == true;
+    final bool isSuperuser = request.jsonData['is_superuser'] == true;
 
     List<Player> filtered = _players;
     if (selectedRole != null) {
@@ -48,7 +49,10 @@ class _SquadPageState extends State<SquadPage> {
     }
 
     return Scaffold(
-      endDrawer: const RightDrawer(),
+      endDrawer: RightDrawer(
+        isAdmin: isAdmin,
+        isSuperuser: isSuperuser,
+      ),
       body: SafeArea(
         child: Column(
           children: [

@@ -30,7 +30,7 @@ class Player {
   });
 
   factory Player.fromJson(Map<String, dynamic> json) {
-    int? _toInt(dynamic v) {
+    int? toInt(dynamic v) {
       if (v == null) return null;
       if (v is int) return v;
       if (v is String) return int.tryParse(v);
@@ -38,21 +38,21 @@ class Player {
     }
 
     return Player(
-      id: _toInt(json['id']) ?? 0,
+      id: toInt(json['id']) ?? 0,
       name: json['name'] ?? '',
       fname: json['fname'] ?? '',
       lname: json['lname'] ?? '',
       photoUrl: json['photo_url'] ?? '',
       club: json['club'] ?? '',
       birthDate: json['birth_date'],
-      heightCm: _toInt(json['height_cm']),
+      heightCm: toInt(json['height_cm']),
       positions: json['positions'] != null
           ? List<String>.from(json['positions'])
           : [],
       roleTag: json['role_tag'] ?? '',
-      caps: _toInt(json['caps']) ?? 0,
-      goals: _toInt(json['goals']) ?? 0,
-      assists: _toInt(json['assists']) ?? 0,
+      caps: toInt(json['caps']) ?? 0,
+      goals: toInt(json['goals']) ?? 0,
+      assists: toInt(json['assists']) ?? 0,
     );
   }
 }

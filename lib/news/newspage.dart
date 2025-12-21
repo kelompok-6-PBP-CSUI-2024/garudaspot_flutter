@@ -13,10 +13,11 @@ import '../right_drawer.dart';
 /// News landing page for the news module.
 /// Fetches from the Django backend API.
 class NewsPage extends StatefulWidget {
-  const NewsPage({super.key, this.isAdmin = false});
+  const NewsPage({super.key, this.isAdmin = false, this.isSuperuser = false});
 
   /// Toggle this to show the Add News button (mirrors web admin-only action).
   final bool isAdmin;
+  final bool isSuperuser;
 
   @override
   State<NewsPage> createState() => _NewsPageState();
@@ -198,7 +199,10 @@ class _NewsPageState extends State<NewsPage> {
           const SizedBox(width: 4),
         ],
       ),
-      endDrawer: const RightDrawer(),
+      endDrawer: RightDrawer(
+        isAdmin: widget.isAdmin,
+        isSuperuser: widget.isSuperuser,
+      ),
       body: Column(
         children: [
           NewsHeader(

@@ -18,11 +18,12 @@ class TicketLink {
   final String imgVendor;
 
   factory TicketLink.fromJson(Map<String, dynamic> json) {
+    final dynamic rawUrl = json['vendor_link'] ?? json['url'] ?? json['link'];
     return TicketLink(
       id: _asInt(json['id']),
       linkId: json['link_id']?.toString() ?? '',
       vendor: json['vendor']?.toString() ?? '',
-      vendorLink: json['vendor_link']?.toString() ?? '',
+      vendorLink: rawUrl?.toString() ?? '',
       price: _asInt(json['price']) ?? 0,
       imgVendor: json['img_vendor']?.toString() ?? '',
     );

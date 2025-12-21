@@ -47,21 +47,21 @@ class RightDrawer extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => NewsPage(isAdmin: isAdmin),
+              builder: (_) => NewsPage(isAdmin: isAdmin, isSuperuser: isSuperuser),
             ),
           );
         } else if (label == 'Merch') {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => MerchPage(isAdmin: isAdmin),
+              builder: (_) => MerchPage(isAdmin: isAdmin, isSuperuser: isSuperuser),
             ),
           );
         } else if (label == 'Schedule') {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => MatchListPage(isAdmin: isAdmin),
+              builder: (_) => MatchListPage(isAdmin: isAdmin, isSuperuser: isSuperuser),
             ),
           );
         } else if (isLogout) {
