@@ -163,20 +163,26 @@ class _NewsPageState extends State<NewsPage> {
         elevation: 0,
         titleSpacing: 12,
         automaticallyImplyLeading: false,
-        leading: IconButton(
-          onPressed: () {
-            final nav = Navigator.of(context);
-            if (nav.canPop()) {
-              nav.pop();
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Tidak ada halaman untuk kembali.')),
-              );
-            }
-          },
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          tooltip: 'Back',
-        ),
+        leading: request.loggedIn
+            ? IconButton(
+                onPressed: () {
+                  final nav = Navigator.of(context);
+                  if (nav.canPop()) {
+                    nav.pop();
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Tidak ada halaman untuk kembali.')),
+                    );
+                  }
+                },
+                icon: const Icon(Icons.arrow_back, color: Colors.black),
+                tooltip: 'Back',
+              )
+            : IconButton(
+                onPressed: () => Navigator.pushReplacementNamed(context, '/'),
+                icon: const Icon(Icons.login, color: Colors.black),
+                tooltip: 'Login',
+              ),
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
