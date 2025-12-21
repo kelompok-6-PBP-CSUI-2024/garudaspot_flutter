@@ -241,7 +241,10 @@ class _NewsPageState extends State<NewsPage> {
   }
 
   Widget _buildFilters() {
-    TextStyle labelStyle = const TextStyle(fontWeight: FontWeight.w600);
+    TextStyle labelStyle = const TextStyle(
+      fontWeight: FontWeight.w600,
+      color: Colors.black,
+    );
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
       child: Row(
@@ -259,8 +262,14 @@ class _NewsPageState extends State<NewsPage> {
                   isExpanded: true,
                   style: labelStyle,
                   items: _months
-                      .map((m) => DropdownMenuItem(value: m, child: Text('Bulan: $m')))
+                      .map(
+                        (m) => DropdownMenuItem(
+                          value: m,
+                          child: Text('Bulan: $m', style: labelStyle),
+                        ),
+                      )
                       .toList(),
+                  dropdownColor: Colors.white,
                   onChanged: (value) {
                     if (value == null) return;
                     setState(() {
@@ -286,9 +295,28 @@ class _NewsPageState extends State<NewsPage> {
                   isExpanded: true,
                   style: labelStyle,
                   items: const [
-                    DropdownMenuItem(value: 'Terbaru', child: Text('Urutkan: Terbaru')),
-                    DropdownMenuItem(value: 'Terlama', child: Text('Urutkan: Terlama')),
+                    DropdownMenuItem(
+                      value: 'Terbaru',
+                      child: Text(
+                        'Urutkan: Terbaru',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: 'Terlama',
+                      child: Text(
+                        'Urutkan: Terlama',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
                   ],
+                  dropdownColor: Colors.white,
                   onChanged: (value) {
                     if (value == null) return;
                     setState(() {
