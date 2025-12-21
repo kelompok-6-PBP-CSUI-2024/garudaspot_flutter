@@ -1,0 +1,82 @@
+# CI/CD: Build and release signed Android APK to GitHub Releases
+
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v4
+
+      - name: Get version from pubspec.yaml
+        id: version
+        run: |
+          echo "version=$(grep '^version:' pubspec.yaml | cut -d ' ' -f2)" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: "17"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Get packages
+        run: flutter pub get
+
+      - name: Decode Keystore (if provided)
+        if: env.KEY_JKS != ''
+        env:
+          KEY_JKS: ${{ secrets.KEY_JKS }}
+        run: echo "$KEY_JKS" | base64 -d > release-keystore.jks
+
+      - name: Build APK (per-ABI)
+        run: flutter build apk --split-per-abi
+
+      - name: Sign APKs (if keystore exists)
+        if: env.KEY_JKS != ''
+        env:
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          for apk in build/app/outputs/flutter-apk/*.apk; do
+            echo "Signing $apk..."
+            jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
+              -keystore release-keystore.jks \
+              -storepass "$KEY_PASSWORD" \
+              -keypass "$KEY_PASSWORD" \
+              "$apk" release
+          done
+
+      - name: Cleanup Keystore
+        if: always()
+        run: rm -f release-keystore.jks
+
+      - name: Get current date
+        id: date
+        run: echo "date=$(TZ='Asia/Jakarta' date +'%A %d-%m-%Y %T WIB')" >> "$GITHUB_OUTPUT"
+
+      - name: Generate unique tag
+        id: tag
+        run: echo "tag=v${{ steps.version.outputs.version }}-$(date +'%Y%m%d%H%M%S')" >> "$GITHUB_OUTPUT"
+
+      - name: Release APK
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: false
+          artifacts: build/app/outputs/flutter-apk/*.apk
+          body: Published at ${{ steps.date.outputs.date }}
+          name: v${{ steps.version.outputs.version }} - ${{ steps.date.outputs.date }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ steps.tag.outputs.tag }}
