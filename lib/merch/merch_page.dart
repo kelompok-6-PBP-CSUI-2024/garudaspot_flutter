@@ -777,8 +777,10 @@ class _MerchPageState extends State<MerchPage> {
 
   List<Merch> _applyFilterSort(List<Merch> items) {
     Iterable<Merch> filtered = items;
-    if (_selectedFilter != 'All') {
-      filtered = filtered.where((m) => m.category == _selectedFilter);
+    if (_selectedFilter.toLowerCase() != 'all') {
+      filtered = filtered.where(
+        (m) => m.category.toLowerCase() == _selectedFilter.toLowerCase(),
+      );
     }
 
     final sorted = filtered.toList();
