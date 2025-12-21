@@ -94,8 +94,9 @@ Semua modul berjalan di atas pola integrasi yang sama.
 - Ticket: `/tickets/json/` (GET list), `/tickets/json/<uuid:match_uuid>/` (GET detail), `/tickets/create/` (POST admin), `/tickets/edit/<uuid:id>/`, `/tickets/delete/<uuid:id>/`, `/tickets/link/create/<uuid:match_uuid>/`, `/tickets/link/delete/<uuid:id>/`.
 - Merch: `/merch/json/` (GET list), `/merch/api/update/<id>/` (POST admin), `/merch/api/delete/<id>/` (POST admin).
 
-## 7. Tautan Design Figma
+## 7. Tautan Design Figma dan Video Promosi
 [FIGMA](https://www.figma.com/files/team/1405405366915688940/all-projects?fuid=1405405363221989470)
+[GDrive video promosi](https://drive.google.com/drive/u/0/folders/177ytMnZFzX1YUFqtcLQVqVOK2IOdFSOR)
 
 ## 8. Cara Menjalankan Flutter Client (lokal)
 1. Pastikan backend Django berjalan di `http://localhost:8000` (atau sesuaikan base URL di file service modul jika perlu).
