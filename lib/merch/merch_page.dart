@@ -78,6 +78,7 @@ class _MerchPageState extends State<MerchPage> {
   @override
   Widget build(BuildContext context) {
     final request = context.watch<CookieRequest>();
+    final isAdmin = request.jsonData['is_admin'] == true || widget.isAdmin;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -113,7 +114,7 @@ class _MerchPageState extends State<MerchPage> {
               tooltip: 'Menu',
             ),
           ),
-          if (widget.isAdmin)
+          if (isAdmin)
             IconButton(
               onPressed: () => _openAddDialog(request),
               icon: const Icon(Icons.add, color: Colors.black),
@@ -122,7 +123,7 @@ class _MerchPageState extends State<MerchPage> {
           const SizedBox(width: 4),
         ],
       ),
-      endDrawer: RightDrawer(isAdmin: widget.isAdmin),
+      endDrawer: RightDrawer(isAdmin: isAdmin),
       body: Container(
         color: Colors.white,
         child: FutureBuilder<List<Merch>>(
@@ -240,7 +241,7 @@ class _MerchPageState extends State<MerchPage> {
                                 MaterialPageRoute(
                                   builder: (_) => MerchDetailPage(
                                     merch: merch,
-                                    isAdmin: widget.isAdmin,
+                                    isAdmin: isAdmin,
                                     onEdit: () => _openEditDialog(
                                       request: request,
                                       merch: merch,
@@ -329,7 +330,7 @@ class _MerchPageState extends State<MerchPage> {
                                                   'Shop Now (Visit Vendor)',
                                                 ),
                                               ),
-                                            if (widget.isAdmin)
+                                            if (isAdmin)
                                               ElevatedButton(
                                                 style: ElevatedButton.styleFrom(
                                                   backgroundColor: Colors.grey.shade400,
@@ -341,7 +342,7 @@ class _MerchPageState extends State<MerchPage> {
                                                 ),
                                                 child: const Text('Edit'),
                                               ),
-                                            if (widget.isAdmin)
+                                            if (isAdmin)
                                               ElevatedButton(
                                                 style: ElevatedButton.styleFrom(
                                                   backgroundColor: Colors.red.shade700,
@@ -387,7 +388,7 @@ class _MerchPageState extends State<MerchPage> {
   }
 
   void _openEditDialog({required CookieRequest request, required Merch merch}) {
-    if (!widget.isAdmin) return;
+    if (!(request.jsonData['is_admin'] == true || widget.isAdmin)) return;
     final nameC = TextEditingController(text: merch.name);
     final vendorC = TextEditingController(text: merch.vendor);
     final priceC = TextEditingController(text: merch.price.toString());
@@ -491,7 +492,7 @@ class _MerchPageState extends State<MerchPage> {
   }
 
   void _openAddDialog(CookieRequest request) {
-    if (!widget.isAdmin) return;
+    if (!(request.jsonData['is_admin'] == true || widget.isAdmin)) return;
     final nameC = TextEditingController();
     final vendorC = TextEditingController();
     final priceC = TextEditingController(text: '0');
@@ -602,7 +603,7 @@ class _MerchPageState extends State<MerchPage> {
     required String link,
     required String description,
   }) async {
-    if (!widget.isAdmin) return;
+    if (!(request.jsonData['is_admin'] == true || widget.isAdmin)) return;
     try {
       await request.post(
         "http://localhost:8000/merch/api/create/",
@@ -648,7 +649,7 @@ class _MerchPageState extends State<MerchPage> {
     required String link,
     required String description,
   }) async {
-    if (!widget.isAdmin) return;
+    if (!(request.jsonData['is_admin'] == true || widget.isAdmin)) return;
     try {
       await request.post(
         "http://localhost:8000/merch/api/update/$merchId/",
@@ -686,7 +687,7 @@ class _MerchPageState extends State<MerchPage> {
     required CookieRequest request,
     required Merch merch,
   }) async {
-    if (!widget.isAdmin) return;
+    if (!(request.jsonData['is_admin'] == true || widget.isAdmin)) return;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -714,7 +715,7 @@ class _MerchPageState extends State<MerchPage> {
     required CookieRequest request,
     required int merchId,
   }) async {
-    if (!widget.isAdmin) return;
+    if (!(request.jsonData['is_admin'] == true || widget.isAdmin)) return;
     try {
       await request.post(
         "http://localhost:8000/merch/api/delete/$merchId/",
