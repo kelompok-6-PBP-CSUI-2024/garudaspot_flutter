@@ -80,6 +80,7 @@ class _MerchPageState extends State<MerchPage> {
   @override
   Widget build(BuildContext context) {
     final request = context.watch<CookieRequest>();
+    final isAdmin = request.jsonData['is_admin'] == true || widget.isAdmin;
 
     return Scaffold(
       backgroundColor: Colors.white,
