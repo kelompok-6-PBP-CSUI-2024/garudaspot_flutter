@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
+
+import '/right_drawer.dart';
 
 class ForumPage extends StatefulWidget {
   final String username; // nama user login
@@ -19,10 +22,24 @@ class ForumPage extends StatefulWidget {
 class _ForumPageState extends State<ForumPage> {
   static const String _baseUrl = 'http://localhost:8000/forum';
 
+  String get _currentUsername {
+  final request = context.read<CookieRequest>();
+  final username = request.jsonData['username'];
+  if (username is String && username.isNotEmpty) {
+    return username;
+  }
+  return widget.username; // fallback
+  }
+
+  // untuk buka right drawer dari tombol
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   // posts berisi map: author, date, title, content, category, likeCount, likedBy, comments
   List<Map<String, dynamic>> posts = [];
-
   bool _isLoading = false;
+
+  // LOAD MORE
+  int _visiblePostCount = 5;
 
   // FILTER
   String _selectedFilter = 'Semua';
@@ -40,6 +57,13 @@ class _ForumPageState extends State<ForumPage> {
   List<Map<String, dynamic>> get _filteredPosts {
     if (_selectedFilter == 'Semua') return posts;
     return posts.where((p) => p['category'] == _selectedFilter).toList();
+  }
+
+  // hanya ambil sesuai limit tampil
+  List<Map<String, dynamic>> get _visiblePosts {
+    final list = _filteredPosts;
+    if (list.length <= _visiblePostCount) return list;
+    return list.take(_visiblePostCount).toList();
   }
 
   // FORM STATE
@@ -65,32 +89,18 @@ class _ForumPageState extends State<ForumPage> {
 
   Future<void> _loadPostsFromApi() async {
   setState(() => _isLoading = true);
+
   try {
-    final uri = Uri.parse('$_baseUrl/api/posts/');
-    final resp = await http.get(uri);
+    final request = context.read<CookieRequest>();
 
-    if (resp.statusCode != 200) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Gagal load posts: ${resp.statusCode} ${resp.reasonPhrase}',
-            ),
-          ),
-        );
-      }
-      return;
-    }
+    final resp = await request.get('$_baseUrl/api/posts/');
+    // resp sudah berupa decoded JSON (Map/List)
 
-    final decoded = jsonDecode(resp.body);
-
-    // backend kamu mengirim {"results": [ ... ] }
     final List list;
-    if (decoded is Map<String, dynamic> && decoded['results'] is List) {
-      list = decoded['results'] as List;
+    if (resp is Map<String, dynamic> && resp['results'] is List) {
+      list = resp['results'] as List;
     } else {
-      // jaga-jaga kalau nanti kamu ubah jadi list langsung
-      list = decoded as List;
+      list = resp as List;
     }
 
     setState(() {
@@ -106,7 +116,9 @@ class _ForumPageState extends State<ForumPage> {
           'content': m['content'] ?? '',
           'category': m['category'] ?? '',
           'likeCount': m['like_count'] ?? 0,
-          'likedBy': <String>[],
+          'likedBy': (m['is_liked'] == true)
+        ? <String>[_currentUsername]
+        : <String>[],
           'comments': <Map<String, String>>[],
         };
       }).toList();
@@ -118,11 +130,10 @@ class _ForumPageState extends State<ForumPage> {
       );
     }
   } finally {
-    if (mounted) {
-      setState(() => _isLoading = false);
-    }
+    if (mounted) setState(() => _isLoading = false);
   }
 }
+
 
   // ====== FORM DIALOG ======
 
@@ -184,13 +195,10 @@ class _ForumPageState extends State<ForumPage> {
                       ),
                       value: _selectedKategori,
                       items: _kategoriList
-                          .map((k) =>
-                              DropdownMenuItem(value: k, child: Text(k)))
+                          .map((k) => DropdownMenuItem(value: k, child: Text(k)))
                           .toList(),
-                      onChanged: (value) =>
-                          setState(() => _selectedKategori = value),
-                      validator: (v) =>
-                          v == null ? 'Kategori wajib dipilih' : null,
+                      onChanged: (value) => setState(() => _selectedKategori = value),
+                      validator: (v) => v == null ? 'Kategori wajib dipilih' : null,
                     ),
                     const SizedBox(height: 16),
 
@@ -233,109 +241,158 @@ class _ForumPageState extends State<ForumPage> {
 
   // ====== API: KIRIM POST BARU KE DJANGO ======
 
+  String _makeUniqueTitleForBackend(String originalTitle) {
+    final suffix = DateTime.now().millisecondsSinceEpoch;
+    return '${originalTitle}__$suffix';
+  }
+
   Future<void> _submitPost(BuildContext dialogContext) async {
-    if (!_formKey.currentState!.validate()) return;
+  if (!_formKey.currentState!.validate()) return;
 
-    final title = _judulController.text.trim();
-    final content = _isiController.text.trim();
-    final category = _selectedKategori ?? 'Match';
+  final titleOriginal = _judulController.text.trim();
+  final content = _isiController.text.trim();
+  final category = _selectedKategori ?? 'Match';
+  final titleForBackend = _makeUniqueTitleForBackend(titleOriginal);
 
-    setState(() => _isLoading = true);
+  setState(() => _isLoading = true);
 
-    try {
-      final uri = Uri.parse('$_baseUrl/api/posts/');
-      final resp = await http.post(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'author_name': widget.username, // sesuai views Django
-          'title': title,
-          'content': content,
-          'category': category,
-        }),
-      );
+  try {
+    final request = context.read<CookieRequest>();
 
-      if (resp.statusCode != 201) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Gagal buat post: ${resp.statusCode} ${resp.body}',
-              ),
-            ),
-          );
-        }
-      } else {
-        final m = jsonDecode(resp.body) as Map<String, dynamic>;
+    // pakai CookieRequest supaya session login kebawa
+    final resp = await request.postJson(
+      '$_baseUrl/api/posts/',
+      jsonEncode({
+        'author': _currentUsername, // FIX: pakai user login beneran
+        'title': titleForBackend,
+        'content': content,
+        'category': category,
+      }),
+    );
 
-        // Tambah ke list lokal biar langsung muncul di layar
-        setState(() {
-          posts.insert(0, {
-            'id': m['id'],
-            'slug': m['slug'],
-            'author': m['author'] ?? '',
-            'date': m['date'] ?? '',
-            'title': m['title'] ?? '',
-            'content': m['content'] ?? '',
-            'category': m['category'] ?? '',
-            'likeCount': m['like_count'] ?? 0,
-            'likedBy': <String>[],
-            'comments': <Map<String, String>>[],
-          });
-          _selectedFilter = 'Semua';
-        });
-
-        _judulController.clear();
-        _isiController.clear();
-        _selectedKategori = null;
-
-        Navigator.of(dialogContext).pop();
-      }
-    } catch (e) {
+    // resp sudah decoded JSON (Map)
+    if (resp is! Map<String, dynamic> || resp['id'] == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error buat post: $e')),
+          SnackBar(content: Text('Gagal buat post: $resp')),
         );
       }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      return;
     }
+
+    final m = resp;
+
+    setState(() {
+      posts.insert(0, {
+        'id': m['id'],
+        'slug': m['slug'],
+        'author': m['author'] ?? '',
+        'date': m['date'] ?? '',
+        'title': titleOriginal,
+        'content': m['content'] ?? '',
+        'category': m['category'] ?? '',
+        'likeCount': m['like_count'] ?? 0,
+        'likedBy': <String>[], // tetap
+        'comments': <Map<String, String>>[],
+      });
+
+      _selectedFilter = 'Semua';
+      _visiblePostCount = 5;
+    });
+
+    _judulController.clear();
+    _isiController.clear();
+    _selectedKategori = null;
+
+    Navigator.of(dialogContext).pop();
+  } catch (e) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error buat post: $e')),
+      );
+    }
+  } finally {
+    if (mounted) setState(() => _isLoading = false);
   }
+}
+
 
   // ====== LIKE (MASIH LOKAL, BELUM KE BACKEND) ======
 
-  void _toggleLike(int originalIndex) {
-    final post = posts[originalIndex];
+  Future<void> _toggleLike(int originalIndex) async {
+  final post = posts[originalIndex];
+  final slug = post['slug'];
 
-    final List<String> likedBy;
-    final raw = post['likedBy'];
-    if (raw is List) {
-      likedBy = raw.cast<String>();
-    } else {
-      likedBy = <String>[];
+  if (slug == null) return;
+
+  try {
+    final request = context.read<CookieRequest>();
+
+    // endpoint toggle like (Django)
+    final resp = await request.postJson(
+      '$_baseUrl/api/posts/$slug/like/',
+      jsonEncode({}), // body kosong aja
+    );
+
+    if (resp is! Map<String, dynamic>) return;
+
+    final bool liked = resp['liked'] == true;
+    final int likeCount = (resp['like_count'] as int?) ?? 0;
+
+    // kita tetap pakai struktur "likedBy" yg sudah ada
+    final List<String> likedBy = <String>[];
+    if (liked) likedBy.add(_currentUsername);
+
+    setState(() {
+      posts[originalIndex]['likedBy'] = likedBy;
+      posts[originalIndex]['likeCount'] = likeCount;
+    });
+  } catch (e) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal like: $e')),
+      );
     }
-
-    if (likedBy.contains(widget.username)) {
-      likedBy.remove(widget.username);
-    } else {
-      likedBy.add(widget.username);
-    }
-
-    posts[originalIndex]['likedBy'] = likedBy;
-    posts[originalIndex]['likeCount'] = likedBy.length;
-
-    setState(() {});
   }
+}
 
-  // ====== UI ======
+    Future<void> _deletePost(String slug) async {
+      if (!widget.isAdmin) return;
+
+      try {
+        final request = context.read<CookieRequest>();
+
+        // Panggil view delete_post yang sudah ada (login_required + superuser check)
+        // NOTE: ini view Django kamu nge-redirect, tapi untuk Flutter cukup anggap sukses kalau gak error.
+        await request.post('$_baseUrl/delete/$slug/', {});
+
+        // refresh list
+        await _loadPostsFromApi();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Post berhasil dihapus')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Gagal hapus post: $e')),
+          );
+        }
+      }
+    }
+
+
 
   @override
   Widget build(BuildContext context) {
     final isDesktop = MediaQuery.of(context).size.width >= 800;
 
     return Scaffold(
+      key: _scaffoldKey,
+      endDrawer: const RightDrawer(), // RIGHT DRAWER
+
       backgroundColor: const Color(0xFF3A3A3A),
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(60),
@@ -349,14 +406,25 @@ class _ForumPageState extends State<ForumPage> {
                 'Garuda Spot',
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
-              IconButton(
-                onPressed: _openPostDialog,
-                icon: const Icon(Icons.add_comment_outlined),
+
+              // tombol add + menu drawer
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: _openPostDialog,
+                    icon: const Icon(Icons.add_comment_outlined),
+                  ),
+                  IconButton(
+                    onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+                    icon: const Icon(Icons.menu),
+                  ),
+                ],
               ),
             ],
           ),
         ),
       ),
+
       body: isDesktop ? _buildDesktopLayout() : _buildMobileLayout(),
     );
   }
@@ -393,13 +461,15 @@ class _ForumPageState extends State<ForumPage> {
                 _DesktopCategoryItem(
                   text: cat,
                   isSelected: _selectedFilter == cat,
-                  onTap: () => setState(() => _selectedFilter = cat),
+                  onTap: () => setState(() {
+                    _selectedFilter = cat;
+                    _visiblePostCount = 5; // reset load more saat ganti filter
+                  }),
                 ),
             ],
           ),
         ),
 
-        // Area konten
         Expanded(
           child: Container(
             color: Colors.white,
@@ -414,7 +484,6 @@ class _ForumPageState extends State<ForumPage> {
   Widget _buildMobileLayout() {
     return Column(
       children: [
-        // Header FORUM + filter
         Container(
           height: 220,
           width: double.infinity,
@@ -441,7 +510,10 @@ class _ForumPageState extends State<ForumPage> {
                       child: ChoiceChip(
                         label: Text(cat),
                         selected: sel,
-                        onSelected: (_) => setState(() => _selectedFilter = cat),
+                        onSelected: (_) => setState(() {
+                          _selectedFilter = cat;
+                          _visiblePostCount = 5; // reset load more
+                        }),
                         selectedColor: const Color(0xFF7A1E1E),
                         labelStyle: TextStyle(
                           color: sel ? Colors.white : Colors.black,
@@ -465,7 +537,7 @@ class _ForumPageState extends State<ForumPage> {
     );
   }
 
-  // LIST POST
+  // LIST POST + LOAD MORE
   Widget _buildPostList({double paddingHorizontal = 40}) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -477,11 +549,29 @@ class _ForumPageState extends State<ForumPage> {
 
     return ListView.builder(
       padding: EdgeInsets.symmetric(horizontal: paddingHorizontal, vertical: 24),
-      itemCount: _filteredPosts.length,
+      itemCount: _visiblePosts.length + 1, // +1 untuk tombol Load More
       itemBuilder: (ctx, index) {
-        final post = _filteredPosts[index];
+        // tombol Load More di paling bawah
+        if (index == _visiblePosts.length) {
+          final hasMore = _visiblePostCount < _filteredPosts.length;
+          if (!hasMore) return const SizedBox.shrink();
 
-        // index asli di list posts
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Center(
+              child: ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    _visiblePostCount += 5;
+                  });
+                },
+                child: const Text('Load More'),
+              ),
+            ),
+          );
+        }
+
+        final post = _visiblePosts[index];
         final originalIndex = posts.indexOf(post);
 
         final List<String> likedBy = (() {
@@ -490,7 +580,7 @@ class _ForumPageState extends State<ForumPage> {
           return <String>[];
         })();
 
-        final bool isLiked = likedBy.contains(widget.username);
+        final bool isLiked = likedBy.contains(_currentUsername);
         final int likeCount = (post['likeCount'] as int?) ?? likedBy.length;
 
         return Column(
@@ -505,18 +595,40 @@ class _ForumPageState extends State<ForumPage> {
               likeCount: likeCount,
               onLike: () => _toggleLike(originalIndex),
               canDelete: widget.isAdmin,
-              onDelete: null, // belum implement delete ke backend
+              onDelete: widget.isAdmin
+                  ? () async {
+                      final slug = (post['slug'] ?? '').toString();
+                      if (slug.isEmpty) return;
+
+                      final ok = await showDialog<bool>(
+                        context: context,
+                        builder: (_) => AlertDialog(
+                          title: const Text('Hapus post?'),
+                          content: const Text('Aksi ini tidak bisa dibatalkan.'),
+                          actions: [
+                            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Batal')),
+                            ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Hapus')),
+                          ],
+                        ),
+                      );
+
+                      if (ok == true) {
+                        await _deletePost(slug);
+                      }
+                    }
+                  : null,
+
               onTapTitle: () async {
                 await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (_) => PostDetailPage(
-                      username: widget.username,
-                      initialPost: post,
-                    ),
+                    username: _currentUsername,
+                    isAdmin: widget.isAdmin,
+                    initialPost: post,
+                  ),
                   ),
                 );
-                // kalau nanti ada API comment/like di backend, bisa panggil _loadPostsFromApi();
               },
             ),
             const Divider(
@@ -605,7 +717,6 @@ class _PostCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header: author + date + category + delete (kalau admin)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -621,10 +732,7 @@ class _PostCard extends StatelessWidget {
                             color: Colors.black,
                           ),
                         ),
-                        const TextSpan(
-                          text: '   ',
-                          style: TextStyle(color: Colors.black),
-                        ),
+                        const TextSpan(text: '   '),
                         TextSpan(
                           text: date,
                           style: const TextStyle(
@@ -649,11 +757,7 @@ class _PostCard extends StatelessWidget {
                   const SizedBox(width: 8),
                   IconButton(
                     onPressed: onDelete,
-                    icon: const Icon(
-                      Icons.delete,
-                      size: 18,
-                      color: Colors.redAccent,
-                    ),
+                    icon: const Icon(Icons.delete, size: 18, color: Colors.redAccent),
                     tooltip: 'Hapus post',
                   ),
                 ],
@@ -664,17 +768,11 @@ class _PostCard extends StatelessWidget {
               onTap: onTapTitle,
               child: Text(
                 title,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
             ),
             const SizedBox(height: 8),
-            Text(
-              content,
-              style: const TextStyle(fontSize: 14),
-            ),
+            Text(content, style: const TextStyle(fontSize: 14)),
             const SizedBox(height: 12),
             Row(
               children: [
@@ -691,10 +789,7 @@ class _PostCard extends StatelessWidget {
                 const SizedBox(width: 4),
                 Text(
                   '$likeCount',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ],
             ),
@@ -709,11 +804,13 @@ class _PostCard extends StatelessWidget {
 
 class PostDetailPage extends StatefulWidget {
   final String username;
+  final bool isAdmin;
   final Map<String, dynamic> initialPost;
 
   const PostDetailPage({
     super.key,
     required this.username,
+    required this.isAdmin,
     required this.initialPost,
   });
 
@@ -745,27 +842,16 @@ class _PostDetailPageState extends State<PostDetailPage> {
 
     final now = DateTime.now();
     const monthNamesShort = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'Mei',
-      'Jun',
-      'Jul',
-      'Agu',
-      'Sep',
-      'Okt',
-      'Nov',
-      'Des',
+      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
     ];
 
     final dateTimeStr =
-        "${now.day.toString().padLeft(2, '0')} ${monthNamesShort[now.month - 1]} ${now.year} ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
-
-    final name = widget.username;
+        "${now.day.toString().padLeft(2, '0')} ${monthNamesShort[now.month - 1]} ${now.year} "
+        "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
 
     comments.add({
-      'author': name,
+      'author': widget.username,
       'content': _commentController.text.trim(),
       'time': dateTimeStr,
     });
@@ -799,7 +885,6 @@ class _PostDetailPageState extends State<PostDetailPage> {
       ),
       body: Column(
         children: [
-          // Konten post (tanggal dulu, lalu judul, lalu isi)
           Align(
             alignment: Alignment.topLeft,
             child: Padding(
@@ -814,16 +899,10 @@ class _PostDetailPageState extends State<PostDetailPage> {
                   const SizedBox(height: 8),
                   Text(
                     post!['title'] ?? '',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
-                  Text(
-                    post!['content'] ?? '',
-                    style: const TextStyle(fontSize: 14),
-                  ),
+                  Text(post!['content'] ?? '', style: const TextStyle(fontSize: 14)),
                 ],
               ),
             ),
@@ -854,17 +933,12 @@ class _PostDetailPageState extends State<PostDetailPage> {
                               children: [
                                 Text(
                                   c['author'] ?? '',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
                                   c['time'] ?? '',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey,
-                                  ),
+                                  style: const TextStyle(fontSize: 12, color: Colors.grey),
                                 ),
                               ],
                             ),
@@ -873,17 +947,14 @@ class _PostDetailPageState extends State<PostDetailPage> {
                               child: Text(c['content'] ?? ''),
                             ),
                           ),
-                          Padding(
-                            padding:
-                                const EdgeInsets.only(left: 16, bottom: 8),
+                          if (widget.isAdmin)
+                            Padding(
+                            padding: const EdgeInsets.only(left: 16, bottom: 8),
                             child: InkWell(
                               onTap: () => _deleteComment(i),
                               child: const Text(
                                 'Delete',
-                                style: TextStyle(
-                                  color: Colors.red,
-                                  fontSize: 12,
-                                ),
+                                style: TextStyle(color: Colors.red, fontSize: 12),
                               ),
                             ),
                           ),
@@ -894,8 +965,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                   ),
           ),
           Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Column(
               children: [
                 TextField(
