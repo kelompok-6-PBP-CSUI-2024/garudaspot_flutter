@@ -8,6 +8,7 @@ import 'auth/register.dart';
 import 'news/newspage.dart';
 import 'merch/merch_page.dart';
 import 'Squad/player.dart';
+import 'tiket/pages/ticket_view.dart';
 
 void main() {
   runApp(const MyApp());
@@ -33,6 +34,24 @@ class MyApp extends StatelessWidget {
           '/merch': (_) => const MerchPage(),
           '/schedule': (_) => const MatchListPage(),
           '/Squad': (_) => const SquadPage(),
+        },
+        onGenerateRoute: (settings) {
+          if (settings.name == '/ticket') {
+            final args = settings.arguments;
+            bool isAdmin = false;
+            bool isSuperuser = false;
+            if (args is Map) {
+              isAdmin = args['isAdmin'] == true;
+              isSuperuser = args['isSuperuser'] == true;
+            }
+            return MaterialPageRoute(
+              builder: (_) => TicketViewPage(
+                isAdmin: isAdmin,
+                isSuperuser: isSuperuser,
+              ),
+            );
+          }
+          return null;
         },
       ),
     );
